@@ -113,10 +113,10 @@ REAL, DIMENSION(:), INTENT(OUT)      :: PUSTAR! friction velocity (m/s)
 !
 ! diagnostics
 REAL, DIMENSION(:), INTENT(OUT)      :: PQSAT ! humidity at saturation
-REAL, DIMENSION(:), INTENT(OUT)      :: PCD   ! heat drag coefficient
-REAL, DIMENSION(:), INTENT(OUT)      :: PCDN  ! momentum drag coefficient
-REAL, DIMENSION(:), INTENT(OUT)      :: PCH   ! neutral momentum drag coefficient
-REAL, DIMENSION(:), INTENT(OUT)      :: PCE  !transfer coef. for latent heat flux
+REAL, DIMENSION(:), INTENT(OUT)      :: PCD   ! momentum drag coefficient
+REAL, DIMENSION(:), INTENT(OUT)      :: PCDN  ! neutral momentum drag coefficient
+REAL, DIMENSION(:), INTENT(OUT)      :: PCH   ! heat drag coefficient
+REAL, DIMENSION(:), INTENT(OUT)      :: PCE   ! moisture drag coefficient
 REAL, DIMENSION(:), INTENT(OUT)      :: PRI   ! Richardson number
 REAL, DIMENSION(:), INTENT(OUT)      :: PRESA ! aerodynamical resistance
 REAL, DIMENSION(:), INTENT(OUT)      :: PZ0HSEA ! heat roughness length

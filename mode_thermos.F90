@@ -289,7 +289,7 @@ END FUNCTION DPSAT_1D
       FUNCTION QSATW_0D(PT,PP) RESULT(PQSAT)
 !     ######################################
 !
-!!****  *QSATW * - function to compute saturation vapor humidity from
+!!****  *QSATW * - function to compute saturation specific humidity from
 !!                 temperature
 !!
 !!    PURPOSE
@@ -352,10 +352,8 @@ IMPLICIT NONE
 !
 REAL, INTENT(IN)                :: PT     ! Temperature (Kelvin)
 REAL, INTENT(IN)                :: PP     ! Pressure (Pa)
-REAL                            :: PQSAT  ! saturation vapor 
-                                                        ! specific humidity
-                                                        ! with respect to
-                                                        ! water (kg/kg)
+REAL                            :: PQSAT  ! saturation  specific humidity
+                                          ! (kg/kg)
 !
 !*       0.2   Declarations of local variables
 !
@@ -380,6 +378,8 @@ ZWORK2 = XRD/XRV
 !              ---------------------------
 !
 PQSAT = ZWORK2*ZWORK1 / (1.+(ZWORK2-1.)*ZWORK1)
+! no assumpution that R humid air = R dry air but rather R accounts for water
+! vapor content
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('MODE_THERMOS:QSATW_0D',1,ZHOOK_HANDLE)
@@ -391,7 +391,7 @@ END FUNCTION QSATW_0D
       FUNCTION QSATW_1D(PT,PP) RESULT(PQSAT)
 !     ######################################
 !
-!!****  *QSATW * - function to compute saturation vapor humidity from
+!!****  *QSATW * - function to compute saturation specific humidity from
 !!                 temperature
 !!
 !!    PURPOSE
@@ -456,10 +456,9 @@ REAL, DIMENSION(:), INTENT(IN)                :: PT     ! Temperature
                                                         ! (Kelvin)
 REAL, DIMENSION(:), INTENT(IN)                :: PP     ! Pressure
                                                         ! (Pa)
-REAL, DIMENSION(SIZE(PT))                   :: PQSAT  ! saturation vapor 
+REAL, DIMENSION(SIZE(PT))                   :: PQSAT    ! saturation  
                                                         ! specific humidity
-                                                        ! with respect to
-                                                        ! water (kg/kg)
+                                                        ! (kg/kg)
 !
 !*       0.2   Declarations of local variables
 !
@@ -486,6 +485,8 @@ ZWORK2    = XRD/XRV
 !              ---------------------------
 !
 PQSAT(:) = ZWORK2*ZWORK1(:) / (1.+(ZWORK2-1.)*ZWORK1(:))
+! no assumpution that R humid air = R dry air but rather R accounts for water
+! vapor content
 !
 IF (LHOOK) CALL DR_HOOK('MODE_THERMOS:QSATW_1D',1,ZHOOK_HANDLE)
 !
@@ -500,7 +501,7 @@ END FUNCTION QSATW_1D
       FUNCTION QSATW_2D(PT,PP,KMASK,KL) RESULT(PQSAT)
 !     ######################################
 !
-!!****  *QSATW * - function to compute saturation vapor humidity from
+!!****  *QSATW * - function to compute saturation specific humidity from
 !!                 temperature
 !!
 !!    PURPOSE
@@ -572,10 +573,9 @@ INTEGER, DIMENSION(:), INTENT(IN), OPTIONAL   :: KMASK
 INTEGER,               INTENT(IN), OPTIONAL   :: KL
 !                                                KL = Max number of soil moisture layers (DIF option)
 !
-REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2))        :: PQSAT  ! saturation vapor 
+REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2))        :: PQSAT  ! saturation  
                                                         ! specific humidity
-                                                        ! with respect to
-                                                        ! water (kg/kg)
+                                                        ! (kg/kg)
 !
 !*       0.2   Declarations of local variables
 !
@@ -610,6 +610,8 @@ ZFOES(:,1:INL) = PSAT(PT(:,1:INL),IMASK(:))
 !              ---------------------------
 !
 PQSAT(:,:) = XRD/XRV*ZFOES(:,:)/PP(:,:) / (1.+(XRD/XRV-1.)*ZFOES(:,:)/PP(:,:))  
+! no assumpution that R humid air = R dry air but rather R accounts for water
+! vapor content
 !
 IF (LHOOK) CALL DR_HOOK('MODE_THERMOS:QSATW_2D',1,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
@@ -624,22 +626,22 @@ END FUNCTION QSATW_2D
       FUNCTION QSATSEAW_1D(PT,PP) RESULT(PQSAT)
 !     ######################################
 !
-!!****  *QSATW * - function to compute saturation vapor humidity from
+!!****  *QSATW * - function to compute saturation specific humidity from
 !!                 temperature
 !!
 !!    PURPOSE
 !!    -------
 !       The purpose of this function is to compute the saturation vapor 
-!     pressure from temperature over saline seawater
-!      
+!     pressure from temperature over saline seawater and deduce the saturation
+!     specific humidity over saline seawater.
 !
 !!**  METHOD
 !!    ------
 !!       Given temperature T (PT), the saturation vapor pressure es(T)
 !!    (FOES(PT)) is computed by integration of the Clapeyron equation
 !!    from the triple point temperature Tt (XTT) and the saturation vapor 
-!!    pressure of the triple point es(Tt) (XESTT), i.e  
-!!    The reduction due to salinity is compute with the factor 0.98 (reduction of 2%)
+!!    pressure of the triple point es(Tt) (XESTT). A reduction by 2% is applied
+!!    to account for the salinity effect i.e  
 !!     
 !!         es(T)= 0.98*EXP( alphaw - betaw /T - gammaw Log(T) )
 !!  
@@ -657,7 +659,7 @@ END FUNCTION QSATW_2D
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      Module MODD_CST : comtains physical constants
+!!      Module MODD_CST : contains physical constants
 !!        XALPW   : Constant for saturation vapor pressure function
 !!        XBETAW  : Constant for saturation vapor pressure function
 !!        XGAMW   : Constant for saturation vapor pressure function  
@@ -693,16 +695,15 @@ REAL, DIMENSION(:), INTENT(IN)                :: PT     ! Temperature
                                                         ! (Kelvin)
 REAL, DIMENSION(:), INTENT(IN)                :: PP     ! Pressure
                                                         ! (Pa)
-REAL, DIMENSION(SIZE(PT))                   :: PQSAT  ! saturation vapor 
+REAL, DIMENSION(SIZE(PT))                     :: PQSAT  ! saturation  
                                                         ! specific humidity
-                                                        ! with respect to
-                                                        ! water (kg/kg)
+                                                        ! (kg/kg)
 !
 !*       0.2   Declarations of local variables
 !
-REAL, DIMENSION(SIZE(PT))                   :: ZFOES  ! saturation vapor 
+REAL, DIMENSION(SIZE(PT))                   :: ZFOES    ! saturation vapor 
                                                         ! pressure
-                                                        ! (Pascal) 
+                                                        ! (Pa) 
 !
 REAL, DIMENSION(SIZE(PT))                   :: ZWORK1
 REAL                                        :: ZWORK2
@@ -724,6 +725,8 @@ ZWORK2    = XRD/XRV
 !              ---------------------------
 !
 PQSAT(:) = ZWORK2*ZWORK1(:) / (1.+(ZWORK2-1.)*ZWORK1(:))
+! no assumpution that R humid air = R dry air but rather R accounts for water
+! vapor content
 !
 IF (LHOOK) CALL DR_HOOK('MODE_THERMOS:QSATSEAW_1D',1,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
@@ -737,7 +740,7 @@ END FUNCTION QSATSEAW_1D
       FUNCTION QSATSEAW2_1D(PT,PP,PSSS) RESULT(PQSAT)
 !     ######################################
 !
-!!****  *QSATW * - function to compute saturation vapor humidity from
+!!****  *QSATW * - function to compute saturation specific humidity from
 !!                 temperature
 !!
 !!    PURPOSE
@@ -794,10 +797,9 @@ REAL, DIMENSION(:), INTENT(IN)                :: PP     ! Pressure
                                                         ! (Pascal)
 REAL, DIMENSION(:), INTENT(IN)                :: PSSS   ! Salinity
                                                         ! (g/kg)
-REAL, DIMENSION(SIZE(PT))                   :: PQSAT  ! saturation vapor
+REAL, DIMENSION(SIZE(PT))                   :: PQSAT    ! saturation 
                                                         ! specific humidity
-                                                        ! with respect to
-                                                        ! water (kg/kg)
+                                                        ! (kg/kg)
 !
 !*       0.2   Declarations of local variables
 !
@@ -826,6 +828,8 @@ ZWORK2    = XRD/XRV
 !              ------------------------------------
 !
 PQSAT(:) = ZWORK2*ZWORK1(:) / (1.0+(ZWORK2-1.0)*ZWORK1(:))
+! no assumpution that R humid air = R dry air but rather R accounts for water
+! vapor content
 !
 IF (LHOOK) CALL DR_HOOK('MODE_THERMOS:QSATSEAW2_1D',1,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
@@ -838,7 +842,7 @@ END FUNCTION QSATSEAW2_1D
       FUNCTION DQSATW_O_DT_1D(PT,PP,PQSAT) RESULT(PDQSAT)
 !     ##############################################################
 !
-!!****  *QSATW * - function to compute saturation vapor humidity from
+!!****  *QSATW * - function to compute saturation specific humidity from
 !!                 temperature
 !!
 !!    PURPOSE
@@ -905,16 +909,14 @@ REAL, DIMENSION(:),  INTENT(IN)             :: PT     ! Temperature
                                                           ! (Kelvin)
 REAL, DIMENSION(:),  INTENT(IN)             :: PP     ! Pressure
                                                           ! (Pa)
-REAL, DIMENSION(:),  INTENT(IN)             :: PQSAT  ! saturation vapor 
+REAL, DIMENSION(:),  INTENT(IN)             :: PQSAT  ! saturation  
                                                           ! specific humidity
-                                                          ! with respect to
-                                                          ! water (kg/kg))
+                                                          ! (kg/kg))
 REAL, DIMENSION(SIZE(PT))                   :: PDQSAT ! derivative according
                                                           ! to temperature of
-                                                          ! saturation vapor 
+                                                          ! saturation  
                                                           ! specific humidity
-                                                          ! with respect to
-                                                          ! water (kg/kg))
+                                                          ! (kg/kg))
 !
 !*       0.2   Declarations of local variables
 !
@@ -955,7 +957,7 @@ END FUNCTION DQSATW_O_DT_1D
       FUNCTION DQSATI_O_DT_1D(PT,PP,PQSAT) RESULT(PDQSAT)
 !     ##############################################################
 !
-!!****  *QSATW * - function to compute saturation vapor humidity from
+!!****  *QSATW * - function to compute saturation specific humidity from
 !!                 temperature (with respect to ice)
 !!
 !!    PURPOSE
@@ -1022,16 +1024,14 @@ REAL,    DIMENSION(:), INTENT(IN)               :: PT     ! Temperature
                                                           ! (Kelvin)
 REAL,    DIMENSION(:), INTENT(IN)               :: PP     ! Pressure
                                                           ! (Pa)
-REAL,    DIMENSION(:), INTENT(IN)               :: PQSAT  ! saturation vapor 
+REAL,    DIMENSION(:), INTENT(IN)               :: PQSAT  ! saturation  
                                                           ! specific humidity
-                                                          ! with respect to
-                                                          ! water (kg/kg))
+                                                          ! (kg/kg))
 REAL,    DIMENSION(SIZE(PT))                    :: PDQSAT ! derivative according
                                                           ! to temperature of
-                                                          ! saturation vapor 
+                                                          ! saturation  
                                                           ! specific humidity
-                                                          ! with respect to
-                                                          ! water (kg/kg))
+                                                          ! (kg/kg))
 !
 !*       0.2   Declarations of local variables
 !
@@ -1072,7 +1072,7 @@ END FUNCTION DQSATI_O_DT_1D
       FUNCTION QSATI_1D(PT,PP) RESULT(PQSAT)
 !     ######################################
 !
-!!****  *QSATI * - function to compute saturation vapor humidity from
+!!****  *QSATI * - function to compute saturation specific humidity from
 !!                 temperature
 !!
 !!    PURPOSE
@@ -1137,10 +1137,9 @@ REAL, DIMENSION(:), INTENT(IN)                :: PT     ! Temperature
                                                         ! (Kelvin)
 REAL, DIMENSION(:), INTENT(IN)                :: PP     ! Pressure
                                                         ! (Pa)
-REAL, DIMENSION(SIZE(PT))                   :: PQSAT  ! saturation vapor 
+REAL, DIMENSION(SIZE(PT))                   :: PQSAT  ! saturation  
                                                         ! specific humidity
-                                                        ! with respect to
-                                                        ! water (kg/kg)
+                                                        ! (kg/kg)
 !
 !*       0.2   Declarations of local variables
 !
@@ -1166,7 +1165,9 @@ ZWORK2    = XRD/XRV
 !*       2.    COMPUTE SATURATION HUMIDITY
 !              ---------------------------
 !
-PQSAT(:) = ZWORK2*ZWORK1(:) / (1.+(ZWORK2-1.)*ZWORK1(:))
+PQSAT(:) = ZWORK2*ZWORK1(:) / (1.+(ZWORK2-1.)*ZWORK1(:)) 
+! no assumpution that R humid air = R dry air but rather R accounts for water
+! vapor content
 !
 IF (LHOOK) CALL DR_HOOK('MODE_THERMOS:QSATI_1D',1,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
@@ -1179,7 +1180,7 @@ END FUNCTION QSATI_1D
       FUNCTION QSATI_2D(PT,PP,KMASK,KL) RESULT(PQSAT)
 !     ######################################
 !
-!!****  *QSATI * - function to compute saturation vapor humidity from
+!!****  *QSATI * - function to compute saturation specific humidity from
 !!                 temperature
 !!
 !!    PURPOSE
@@ -1251,10 +1252,9 @@ INTEGER, DIMENSION(:), INTENT(IN), OPTIONAL   :: KMASK
 INTEGER,               INTENT(IN), OPTIONAL   :: KL
 !                                                KL = Max number of soil moisture layers (DIF option)
 !                                                      
-REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2))      :: PQSAT  ! saturation vapor 
+REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2))      :: PQSAT  ! saturation  
                                                       ! specific humidity
-                                                      ! with respect to
-                                                      ! water (kg/kg)
+                                                      ! (kg/kg)
 !
 !*       0.2   Declarations of local variables
 !
@@ -1289,6 +1289,8 @@ ZFOES(:,1:INL) = PSAT(PT(:,1:INL),IMASK(:))
 !              ---------------------------
 !
 PQSAT(:,:) = XRD/XRV*ZFOES(:,:)/PP(:,:) / (1.+(XRD/XRV-1.)*ZFOES(:,:)/PP(:,:))  
+! no assumpution that R humid air = R dry air but rather R accounts for water
+! vapor content
 !
 IF (LHOOK) CALL DR_HOOK('MODE_THERMOS:QSATI_2D',1,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------

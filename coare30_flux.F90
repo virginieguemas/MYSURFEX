@@ -222,11 +222,7 @@ PRI(:) = XUNDEF
 !
 PRESA(:)=XUNDEF
 !
-!-------------------------------------------------------------------------------
-!       2. INITIAL GUESS FOR THE ITERATIVE METHOD 
-!          -------------------------------------
-!
-!       2.0     Temperature 
+!       1.3     Temperature 
 !
 ! Set a non-zero value for the temperature gradient
 !
@@ -236,7 +232,7 @@ ELSEWHERE
       ZTA(:)=PTA(:)      
 ENDWHERE
 
-!       2.1     Wind and humidity 
+!       1.4     Wind and humidity 
 !
 ! Sea surface specific humidity 
 !
@@ -251,6 +247,12 @@ ZVMOD(:) = WIND_THRESHOLD(PVMOD(:),PUREF(:))
 ZPA(:) = XP00* (PEXNA(:)**(XCPD/XRD))
 ZQASAT(:) = QSAT(ZTA(:),ZPA(:)) 
 !
+!-------------------------------------------------------------------------------
+!
+!       2. INITIAL GUESS FOR THE ITERATIVE METHOD 
+!          -------------------------------------
+!
+!        2.1    A few parameters
 !
 ZO(:)  = 0.0001
 ZWG(:) = 0.

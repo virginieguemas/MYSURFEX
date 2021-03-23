@@ -50,7 +50,8 @@
 !!    -------------
 !!      Original     1/06/2006
 !!      B. Decharme    06/2009 limitation of Ri
-!!      B. Decharme    09/2012 Bug in Ri calculation and limitation of Ri in surface_ri.F90
+!!      B. Decharme    09/2012 Bug in Ri (temperature in Celsius instead of Kelvin) 
+!!                             and limitation of Ri in surface_ri.F90
 !!      B. Decharme    06/2013 bug in z0 (output) computation 
 !!      J.Escobar      06/2013  for REAL4/8 add EPSILON management
 !!      C. Lebeaupin   03/2014 bug if PTA=PSST and PEXNA=PEXNS: set a minimum value
@@ -102,7 +103,7 @@ REAL, DIMENSION(:), INTENT(IN)       :: PUREF ! atm. level for wind (m)
 REAL, DIMENSION(:), INTENT(IN)       :: PSST  ! Sea Surface Temperature (K)
 REAL, DIMENSION(:), INTENT(IN)       :: PEXNS ! Exner function at sea surface
 REAL, DIMENSION(:), INTENT(IN)       :: PPS   ! air pressure at sea surface (Pa)
-REAL, DIMENSION(:), INTENT(IN)       :: PRAIN !precipitation rate (kg/s/m2)
+REAL, DIMENSION(:), INTENT(IN)       :: PRAIN ! precipitation rate (kg/s/m2)
 !
 REAL, DIMENSION(:), INTENT(INOUT)    :: PZ0SEA! roughness length over the ocean
 !                                                                                 
@@ -124,13 +125,13 @@ REAL, DIMENSION(:), INTENT(OUT)      :: PZ0HSEA ! heat roughness length
 !
 !*      0.2    declarations of local variables
 !
-REAL, DIMENSION(SIZE(PTA))      :: ZVMOD    ! wind intensity
-REAL, DIMENSION(SIZE(PTA))      :: ZPA      ! Pressure at atm. level
-REAL, DIMENSION(SIZE(PTA))      :: ZTA      ! Temperature at atm. level
-REAL, DIMENSION(SIZE(PTA))      :: ZQASAT   ! specific humidity at saturation  at atm. level (kg/kg)
+REAL, DIMENSION(SIZE(PTA))      :: ZVMOD    ! wind intensity at PUREF atm level (m/s)
+REAL, DIMENSION(SIZE(PTA))      :: ZPA      ! pressure at PZREF atm. level (Pa) 
+REAL, DIMENSION(SIZE(PTA))      :: ZTA      ! temperature at PZREF atm. level (Kelvin)
+REAL, DIMENSION(SIZE(PTA))      :: ZQASAT   ! specific humidity at saturation at PZREF (kg/kg)
 !
-REAL, DIMENSION(SIZE(PTA))      :: ZO       ! rougness length ref 
-REAL, DIMENSION(SIZE(PTA))      :: ZWG      ! gustiness factor (m/s)
+REAL, DIMENSION(SIZE(PTA))      :: ZO       ! First guess for aerodynamic roughness (m) 
+REAL, DIMENSION(SIZE(PTA))      :: ZWG      ! Gustiness correction (m/s)
 !
 REAL, DIMENSION(SIZE(PTA))      :: ZDU,ZDT,ZDQ,ZDUWG !differences
 !
@@ -138,13 +139,18 @@ REAL, DIMENSION(SIZE(PTA))      :: ZUSR        !velocity scaling parameter "usta
 REAL, DIMENSION(SIZE(PTA))      :: ZTSR        !temperature sacling parameter "tstar" (degC)
 REAL, DIMENSION(SIZE(PTA))      :: ZQSR        !humidity scaling parameter "qstar" (kg/kg)
 !
-REAL, DIMENSION(SIZE(PTA))      :: ZU10,ZT10   !vertical profils (10-m height) 
-REAL, DIMENSION(SIZE(PTA))      :: ZVISA       !kinematic viscosity of dry air
-REAL, DIMENSION(SIZE(PTA))      :: ZO10,ZOT10  !roughness length at 10m
-REAL, DIMENSION(SIZE(PTA))      :: ZCD,ZCT,ZCC
-REAL, DIMENSION(SIZE(PTA))      :: ZCD10,ZCT10 !transfer coef. at 10m
-REAL, DIMENSION(SIZE(PTA))      :: ZRIBU,ZRIBCU
-REAL, DIMENSION(SIZE(PTA))      :: ZETU,ZL10
+REAL, DIMENSION(SIZE(PTA))      :: ZU10,ZT10   ! neutral wind speed and temperature at 10m  
+REAL, DIMENSION(SIZE(PTA))      :: ZVISA       ! kinematic viscosity of dry air
+REAL, DIMENSION(SIZE(PTA))      :: ZO10,ZOT10  ! Second guess for roughness length from neutral profiles
+REAL, DIMENSION(SIZE(PTA))      :: ZCD         ! first guess of neutral momentum transfer coef. at PUREF
+REAL, DIMENSION(SIZE(PTA))      :: ZCT         ! first guess of neutral heat transfer coef. at PZREF
+REAL, DIMENSION(SIZE(PTA))      :: ZCC         ! C constant as in equation (10) of Grachev and Fairall (1997, JAM)
+REAL, DIMENSION(SIZE(PTA))      :: ZCD10       ! first guess of neutral momentum transfer coef. at 10m
+REAL, DIMENSION(SIZE(PTA))      :: ZCT10       ! first guess of neutral thermal component of heat transfer coef. at 10m 
+                                               ! (see Fairall et al 1996, section 2.1, equation (5) & (9))
+REAL, DIMENSION(SIZE(PTA))      :: ZRIBU,ZRIBCU ! Richardson bulk number Rib, saturation Richardson number 
+REAL, DIMENSION(SIZE(PTA))      :: ZETU        ! Monin-Obukhov stability parameter zeta = z/L
+REAL, DIMENSION(SIZE(PTA))      :: ZL10        ! Monin-Obukhov stability length L
 !
 REAL, DIMENSION(SIZE(PTA))      :: ZCHARN                      !Charnock number depends on wind module
 REAL, DIMENSION(SIZE(PTA))      :: ZTWAVE,ZHWAVE,ZCWAVE,ZLWAVE !to compute gravity waves' impact
@@ -152,7 +158,7 @@ REAL, DIMENSION(SIZE(PTA))      :: ZTWAVE,ZHWAVE,ZCWAVE,ZLWAVE !to compute gravi
 REAL, DIMENSION(SIZE(PTA))      :: ZZL,ZZTL!,ZZQL    !Obukhovs stability 
                                                      !param. z/l for u,T,q
 REAL, DIMENSION(SIZE(PTA))      :: ZRR
-REAL, DIMENSION(SIZE(PTA))      :: ZOT,ZOQ           !rougness length ref
+REAL, DIMENSION(SIZE(PTA))      :: ZOT,ZOQ           ! Roughness length
 REAL, DIMENSION(SIZE(PTA))      :: ZPUZ,ZPTZ,ZPQZ    !PHI funct. for u,T,q 
 !
 REAL, DIMENSION(SIZE(PTA))      :: ZBF               !constants to compute gustiness factor
@@ -180,11 +186,11 @@ REAL, DIMENSION(SIZE(PTA))      :: ZAC      ! Aerodynamical conductance
 INTEGER, DIMENSION(SIZE(PTA))   :: ITERMAX             ! maximum number of iterations
 !
 REAL    :: ZRVSRDM1,ZRDSRV,ZR2 ! thermodynamic constants
-REAL    :: ZBETAGUST           !gustiness factor
-REAL    :: ZZBL                !atm. boundary layer depth (m)
-REAL    :: ZVISW               !m2/s kinematic viscosity of water
-REAL    :: ZS                  !height of rougness length ref
-REAL    :: ZCH10               !transfer coef. at 10m
+REAL    :: ZBETAGUST           ! gustiness factor
+REAL    :: ZZBL                ! atm. boundary layer depth (m)
+REAL    :: ZVISW               ! m2/s kinematic viscosity of water
+REAL    :: ZS                  ! reference height for atmospheric profiles (10m)
+REAL    :: ZCH10               ! first guess of heat transfer coef. at 10m
 !
 INTEGER :: J, JLOOP    !loop indice
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
@@ -203,8 +209,8 @@ ZRDSRV    = XRD/XRV    ! 0.62198
 ZR2       = 1.-ZRDSRV  ! pas utilisé dans cette routine
 ZBETAGUST = 1.2        ! value based on TOGA-COARE experiment
 ZZBL      = 600.       ! Set a default value for boundary layer depth
-ZS        = 10.        ! Standard heigth =10m
-ZCH10     = 0.00115
+ZS        = 10.        ! Standard heigth = 10m
+ZCH10     = 0.00115    ! Heat transfer coefficient at 10m
 !
 ZVISW     = 1.E-6
 !
@@ -254,46 +260,50 @@ ZQASAT(:) = QSAT(ZTA(:),ZPA(:))
 !
 !        2.1    A few parameters
 !
-ZO(:)  = 0.0001
-ZWG(:) = 0.
+ZO(:)  = 0.0001              ! initial guess for aerodynamic roughness length
+ZWG(:) = 0.                  ! initial guess for gustiness correction
 IF (S%LPWG) ZWG(:) = 0.5
 !
-ZCHARN(:) = 0.011  
+ZCHARN(:) = 0.011            ! Charnock parameter set to 0.011 in COARE2.5 but
+                             ! varying between 0.011 and 0.018 in COARE3.0
 !
 DO J=1,SIZE(PTA)
   !
   !      2.2       initial guess
   !    
-  ZDU(J) = ZVMOD(J)   !wind speed difference with surface current(=0) (m/s)
-                      !initial guess for gustiness factor
-  ZDT(J) = -(ZTA(J)/PEXNA(J)) + (PSST(J)/PEXNS(J)) !potential temperature difference
-  ZDQ(J) = PQSAT(J)-PQA(J)                         !specific humidity difference
+  ZDU(J) = ZVMOD(J)          ! wind speed difference with surface (=0) (m/s)
+  ZDT(J) = -(ZTA(J)/PEXNA(J)) + (PSST(J)/PEXNS(J)) ! potential temperature difference
+  ZDQ(J) = PQSAT(J)-PQA(J)                         ! specific humidity difference
   !
-  ZDUWG(J) = SQRT(ZDU(J)**2+ZWG(J)**2)     !wind speed difference including gustiness ZWG
+  ZDUWG(J) = SQRT(ZDU(J)**2+ZWG(J)**2)     ! wind speed difference including gustiness correction
   !
   !      2.3   initialization of neutral coefficients
   !
-  ZU10(J)  = ZDUWG(J)*LOG(ZS/ZO(J))/LOG(PUREF(J)/ZO(J))
-  ZUSR(J)  = 0.035*ZU10(J)
+  ZU10(J)  = ZDUWG(J)*LOG(ZS/ZO(J))/LOG(PUREF(J)/ZO(J)) ! first guess of neutral wind speed at 10m
+  ZUSR(J)  = 0.035*ZU10(J)                              ! first guess of ustar
   ZVISA(J) = 1.326E-5*(1.+6.542E-3*(ZTA(J)-XTT)+&
              8.301E-6*(ZTA(J)-XTT)**2-4.84E-9*(ZTA(J)-XTT)**3) !Andrea (1989) CRREL Rep. 89-11
   ! 
-  ZO10(J) = ZCHARN(J)*ZUSR(J)*ZUSR(J)/XG+0.11*ZVISA(J)/ZUSR(J)
-  ZCD(J)  = (XKARMAN/LOG(PUREF(J)/ZO10(J)))**2  !drag coefficient
-  ZCD10(J)= (XKARMAN/LOG(ZS/ZO10(J)))**2
-  ZCT10(J)= ZCH10/SQRT(ZCD10(J))
-  ZOT10(J)= ZS/EXP(XKARMAN/ZCT10(J))
+  ZO10(J) = ZCHARN(J)*ZUSR(J)*ZUSR(J)/XG+0.11*ZVISA(J)/ZUSR(J) ! second guess for aerodynamic roughness length
+                                                               ! based on Charnock model and neutral profile
+  ZCD(J)  = (XKARMAN/LOG(PUREF(J)/ZO10(J)))**2   ! neutral momentum transfer coefficient at PUREF height
+  ZCD10(J)= (XKARMAN/LOG(ZS/ZO10(J)))**2         ! neutral momentum transfer coefficient at 10m
+  ZCT10(J)= ZCH10/SQRT(ZCD10(J))                 ! neutral thermal component of heat transfer coef. at 10m 
+                                                 ! (see Fairall et al 1996, section 2.1, equation (5) & (9))
+  ZOT10(J)= ZS/EXP(XKARMAN/ZCT10(J))             ! first guess of scalar roughness length estimated from first
+                                                 ! guess of neutral profile
+  ZCT(J) = XKARMAN/LOG(PZREF(J)/ZOT10(J))        ! thermal component of neutral heat transfer coefficient at 
+                                                 ! PZREF height ((see Fairall et al 1996, sec. 2.1, eq. (5) & (9))
+  ZCC(J) = XKARMAN*ZCT(J)/ZCD(J)                 ! C constant as in equation (10) of Grachev and Fairall (1997, JAM)
+                                                 ! used in their zeta = f (Rib) model
   !
-  !-------------------------------------------------------------------------------
-  !             Grachev and Fairall (JAM, 1997)
-  ZCT(J) = XKARMAN/LOG(PZREF(J)/ZOT10(J))      !temperature transfer coefficient
-  ZCC(J) = XKARMAN*ZCT(J)/ZCD(J)               !z/L vs Rib linear coef.
-  !
-  ZRIBCU(J) = -PUREF(J)/(ZZBL*0.004*ZBETAGUST**3) !saturation or plateau Rib
-  !ZRIBU(J) =-XG*PUREF(J)*(ZDT(J)+ZRVSRDM1*(ZTA(J)-XTT)*ZDQ)/&
-  !     &((ZTA(J)-XTT)*ZDUWG(J)**2)
+  ZRIBCU(J) = -PUREF(J)/(ZZBL*0.004*ZBETAGUST**3) !saturation Richardson Bulk number Ribc according to equation 
+                                                 ! (24) in Grachev and Fairall (1997, JAM) assuming CH = 0.004
+                                                 ! instead of CH = 0.003 is advised in their section 3 last paragraph.
+                                                 ! 
   ZRIBU(J)  = -XG*PUREF(J)*(ZDT(J)+ZRVSRDM1*ZTA(J)*ZDQ(J))/&
-               (ZTA(J)*ZDUWG(J)**2)  
+               (ZTA(J)*ZDUWG(J)**2)              ! Richardson Bulk number Rib approximation according to 
+                                                 ! Grachev and Fairall (1997, JAM) equation (11)
   !
   IF (ZRIBU(J)<0.) THEN
     ZETU(J) = ZCC(J)*ZRIBU(J)/(1.+ZRIBU(J)/ZRIBCU(J))    !Unstable G and F
@@ -301,7 +311,7 @@ DO J=1,SIZE(PTA)
     ZETU(J) = ZCC(J)*ZRIBU(J)/(1.+27./9.*ZRIBU(J)/ZCC(J))!Stable 
   ENDIF
   !
-  ZL10(J) = PUREF(J)/ZETU(J) !MO length
+  ZL10(J) = PUREF(J)/ZETU(J)                     ! Monin-Obukhov stability length L
   !
 ENDDO
 !

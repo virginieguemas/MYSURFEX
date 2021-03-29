@@ -350,15 +350,6 @@ DO J=1,SIZE(PTA)
                    ! speeds up convergence (Fairall et al, 2003, section 3)
   ENDIF
   !
-  !      2.5   Parameters for gravity wave models
-  !
-  ZHWAVE(J) = 0.018*ZVMOD(J)*ZVMOD(J)*(1.+0.015*ZVMOD(J))
-                                     ! hs used in equation (23) in Fairall et al (2003)
-                                     ! Where does this formula comes from ?
-  ZTWAVE(J) = 0.729*ZVMOD(J)         ! Tp in equation (27) from Fairall et al (2003)
-                                     ! neutral wind should be used instead of ZVMOD
-  ZCWAVE(J) = XG*ZTWAVE(J)/(2.*XPI)  ! Cp in equation (26) from Fairall et al (2003)
-  ZLWAVE(J) = ZTWAVE(J)*ZCWAVE(J)    ! Lp in equation (26) from Fairall et al (2003)
   !
 ENDDO
 !
@@ -376,23 +367,34 @@ DO JLOOP=1,MAXVAL(ITERMAX) ! begin iterative loop
   !      3.1   Aerodynamic rougness length
   !
     ZU10(J)  = ZUSR(J)/XKARMAN*LOG(ZS/ZO(J)) ! neutral wind speed at 10m required for
-                                             ! roughness length models
+                                             ! all roughness length models
 
     IF (S%NGRVWAVES==0) THEN
       ZCHARN(J) = MAX(0.011,MIN(0.018,0.011+0.007*(ZU10(J)-10.)/8.))
             ! Smith (1988) adapted by Fairall et al (2003) with a varying ZCHARN
             ! according to neutral wind speed (see section 3c)
       ZO(J) = ZCHARN(J)*ZUSR(J)*ZUSR(J)/XG + 0.11*ZVISA(J)/ZUSR(J)
-    ELSE IF (S%NGRVWAVES==1) THEN
+    ELSE
+            ! Parameters for gravity wave models which depend on neutral wind speed
+      ZHWAVE(J) = 0.018*ZU10(J)*ZU10(J)*(1.+0.015*ZU10(J))
+                                     ! hs used in equation (23) in Fairall et al (2003)
+                                     ! Where does this formula comes from ?
+      ZTWAVE(J) = 0.729*ZU10(J)      ! Tp in equation (27) from Fairall et al (2003)
+                                     ! neutral wind should be used instead of ZVMOD
+      ZCWAVE(J) = XG*ZTWAVE(J)/(2.*XPI) ! Cp in equation (26) from Fairall et al (2003)
+      ZLWAVE(J) = ZTWAVE(J)*ZCWAVE(J)   ! Lp in equation (26) from Fairall et al (2003)
+
+      IF (S%NGRVWAVES==1) THEN
             ! OOst et al (2002) accounting for gravity waves
             ! Equation (25b) in Fairall et al (2003)
-      ZO(J) = (50./(2.*XPI))*ZLWAVE(J)*(ZUSR(J)/ZCWAVE(J))**4.5 &
+        ZO(J) = (50./(2.*XPI))*ZLWAVE(J)*(ZUSR(J)/ZCWAVE(J))**4.5 &
               + 0.11*ZVISA(J)/ZUSR(J)
-    ELSE IF (S%NGRVWAVES==2) THEN
+      ELSE IF (S%NGRVWAVES==2) THEN
             ! Taylor and Yelland (2001) accounting for gravity waves
             ! Equation (25a) in Fairall et al (2003)
-      ZO(J) = 1200.*ZHWAVE(J)*(ZHWAVE(J)/ZLWAVE(J))**4.5 &
+        ZO(J) = 1200.*ZHWAVE(J)*(ZHWAVE(J)/ZLWAVE(J))**4.5 &
               + 0.11*ZVISA(J)/ZUSR(J)
+      ENDIF
     ENDIF
     !
     !    3.2   Scalar rougness lengths

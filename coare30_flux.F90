@@ -310,9 +310,8 @@ DO J=1,SIZE(PTA)
   ZCC(J) = XKARMAN*ZCT(J)/ZCD(J)                 ! C constant as in equation (10) of Grachev and Fairall (1997, JAM)
                                                  ! used in their zeta = f (Rib) model
   !
-  ZRIBCU(J) = -PUREF(J)/(ZZBL*0.004*ZBETAGUST**3) !saturation Richardson Bulk number Ribc according to equation 
-                                                 ! (24) in Grachev and Fairall (1997, JAM) assuming CH = 0.004
-                                                 ! instead of CH = 0.003 advised in their section 3 last paragraph.
+  ZRIBCU(J) = -PUREF(J)/(ZZBL*0.003*ZBETAGUST**3) !saturation Richardson Bulk number Ribc according to equation 
+                                                 ! (24) in Grachev and Fairall (1997, JAM).
                                                  ! 
   ! Warning : Grachev and Fairall (1997) assume temperature, humidity and winds to be taken at the same
   ! level in ZCC, ZRIBCU, ZRIBU, ZETU, which is not necessarily the case in this routine (PUREF, PZREF).

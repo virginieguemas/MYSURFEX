@@ -215,7 +215,7 @@ IF (LHOOK) CALL DR_HOOK('COARE30_FLUX',0,ZHOOK_HANDLE)
 ZRVSRDM1  = XRV/XRD-1. ! 0.607766
 ZRDSRV    = XRD/XRV    ! 0.62198
 ZR2       = 1.-ZRDSRV  ! pas utilisé dans cette routine
-ZBETAGUST = 1.2        ! value based on TOGA-COARE experiment
+ZBETAGUST = 1.25       ! value based on TOGA-COARE experiment
 ZZBL      = 600.       ! Set a default value for boundary layer depth
 ZS        = 10.        ! Standard heigth = 10m
 ZCH10     = 0.00115    ! Heat transfer coefficient at 10m
@@ -310,7 +310,7 @@ DO J=1,SIZE(PTA)
   ZCC(J) = XKARMAN*ZCT(J)/ZCD(J)                 ! C constant as in equation (10) of Grachev and Fairall (1997, JAM)
                                                  ! used in their zeta = f (Rib) model
   !
-  ZRIBCU(J) = -PUREF(J)/(ZZBL*0.003*ZBETAGUST**3) !saturation Richardson Bulk number Ribc according to equation 
+  ZRIBCU(J) = -PUREF(J)/(ZZBL*0.003*ZBETAGUST**3) !saturation Richardson Bulk number Ribc according to equation
                                                  ! (24) in Grachev and Fairall (1997, JAM).
                                                  ! 
   ! Warning : Grachev and Fairall (1997) assume temperature, humidity and winds to be taken at the same

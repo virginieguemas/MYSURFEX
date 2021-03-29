@@ -536,8 +536,8 @@ DO J=1,SIZE(PTA)
     !
     !    4.5 Webb correction to latent heat flux
     ! 
-    ZWBAR(J)=- (1./ZRDSRV)*ZUSR(J)*ZQSR(J) / (1.0+(1./ZRDSRV)*PQA(J)) &   ! Equation (21) in Fairall et al (1996)
-               - ZUSR(J)*ZTSR(J)/ZTA(J)         ! Error / should be + and * is missing before (-u*T*/q)
+    ZWBAR(J)=- (1./ZRDSRV)*ZUSR(J)*ZQSR(J) + (1.0+(1./ZRDSRV)*PQA(J))* &   ! Equation (21) in Fairall et al (1996)
+               (- ZUSR(J)*ZTSR(J)/ZTA(J))         
     !
     !    4.6 Friction velocity which contains correction due to rain
     !

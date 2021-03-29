@@ -272,9 +272,6 @@ ZO(:)  = 0.0001              ! first guess for aerodynamic roughness length
 ZWG(:) = 0.                  ! first guess for gustiness correction
 IF (S%LPWG) ZWG(:) = 0.5
 !
-ZCHARN(:) = 0.011            ! Charnock parameter set to 0.011 in COARE2.5 but
-                             ! varying between 0.011 and 0.018 in COARE3.0
-!
 DO J=1,SIZE(PTA)
   !
   !      2.2    Atmospheric profiles
@@ -294,6 +291,8 @@ DO J=1,SIZE(PTA)
   ZVISA(J) = 1.326E-5*(1.+6.542E-3*(ZTA(J)-XTT)+&
              8.301E-6*(ZTA(J)-XTT)**2-4.84E-9*(ZTA(J)-XTT)**3) !Andrea (1989) CRREL Rep. 89-11
   ! 
+  ZCHARN(J) = MAX(0.011,MIN(0.018,0.011+0.007*(ZU10(J)-10.)/8.)) ! Charnock parameter varies between 0.011
+  ! and 0.018 as a function of the neutral wind speed at 10m according to Fairall et al (2003), see section 3c
   ZO10(J) = ZCHARN(J)*ZUSR(J)*ZUSR(J)/XG+0.11*ZVISA(J)/ZUSR(J) ! second guess for aerodynamic roughness length
                                                                ! based on Charnock model and neutral profile
   ZCD(J)  = (XKARMAN/LOG(PUREF(J)/ZO10(J)))**2   ! neutral momentum transfer coefficient at PUREF height
@@ -338,6 +337,7 @@ ENDDO
 ZUSR(:) = ZDUWG(:)*XKARMAN/(LOG(PUREF(:)/ZO10(:))-PSIFCTU(PUREF(:)/ZL10(:)))
 ZTSR(:) = -ZDT(:)*XKARMAN/(LOG(PZREF(:)/ZOT10(:))-PSIFCTT(PZREF(:)/ZL10(:)))
 ZQSR(:) = -ZDQ(:)*XKARMAN/(LOG(PZREF(:)/ZOT10(:))-PSIFCTT(PZREF(:)/ZL10(:)))
+ZO(:) = ZO10(:) ! second guess of aerodynamic roughness length
 !
 ZZL(:) = 0.0   ! Why initializing this to 0 when ZL10 is available as well as PUREF and PZREF ?
 !
@@ -349,10 +349,6 @@ DO J=1,SIZE(PTA)
     ITERMAX(J) = 3 ! maximum number of iterations, only 3 since estimation of zeta from Rib
                    ! speeds up convergence (Fairall et al, 2003, section 3)
   ENDIF
-  !
-  !then modify Charnork for high wind speeds Chris Fairall's data
-  IF (ZDUWG(J)>10.) ZCHARN(J) = 0.011 + (0.018-0.011)*(ZDUWG(J)-10.)/(18.-10.)
-  IF (ZDUWG(J)>18.) ZCHARN(J) = 0.018
   !
   !      2.5   Parameters for gravity wave models
   !
@@ -379,7 +375,11 @@ DO JLOOP=1,MAXVAL(ITERMAX) ! begin iterative loop
   !
   !      3.1   Aerodynamic rougness length
   !
+    ZU10(J)  = ZUSR(J)/XKARMAN*LOG(ZS/ZO(J)) ! neutral wind speed at 10m required for
+                                             ! roughness length models
+
     IF (S%NGRVWAVES==0) THEN
+      ZCHARN(J) = MAX(0.011,MIN(0.018,0.011+0.007*(ZU10(J)-10.)/8.))
             ! Smith (1988) adapted by Fairall et al (2003) with a varying ZCHARN
             ! according to neutral wind speed (see section 3c)
       ZO(J) = ZCHARN(J)*ZUSR(J)*ZUSR(J)/XG + 0.11*ZVISA(J)/ZUSR(J)

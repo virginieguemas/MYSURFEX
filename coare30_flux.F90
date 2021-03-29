@@ -463,7 +463,7 @@ DO J=1,SIZE(PTA)
   !      4.1 Transfert coefficients PCD at PUREF and PCH and PCE at PZREF
   !
   PCD(J) = (ZUSR(J)/ZDUWG(J))**2.
-  PCH(J) = ZUSR(J)*ZTSR(J)/(ZDUWG(J)*(-ZDT)
+  PCH(J) = ZUSR(J)*ZTSR(J)/(ZDUWG(J)*(-ZDT(J)))
   PCE(J) = ZUSR(J)*ZQSR(J)/(ZDUWG(J)*(PQA(J)-PQSAT(J)))
   !
   !      4.2 Neutral transfer coefficients at 10m

@@ -398,8 +398,7 @@ DO JLOOP=1,MAXVAL(ITERMAX) ! begin iterative loop
     !    3.2   Scalar rougness lengths
     !
     ZRR(J) = ZO(J)*ZUSR(J)/ZVISA(J)            ! Roughness Reynolds number
-    ZOQ(J) = MIN(1.15E-4 , 5.5E-5/ZRR(J)**0.6) ! Equation (28) in Fairall et al (2003)
-                                               ! but minimum should be 1E-4
+    ZOQ(J) = MIN(1.1E-4 , 5.5E-5/ZRR(J)**0.6)  ! Equation (28) in Fairall et al (2003)
     ZOT(J) = ZOQ(J)                            ! Idem
     !
     !    3.3   Stability effects : zeta and psi

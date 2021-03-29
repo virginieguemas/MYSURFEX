@@ -320,7 +320,7 @@ DO J=1,SIZE(PTA)
   ! Grachev and Fairall (1997) model to account for two different levels for U and T/Q should also
   ! include an additional PZREF/PUREF in ZCC and PUREF/PZREF in RIBCU which would cancel out.
   ZRIBU(J)  = -XG*PUREF(J)*(ZDT(J)+ZRVSRDM1*ZTA(J)*ZDQ(J))/&
-               (ZTA(J)*ZDUWG(J)**2)              ! Richardson Bulk number Rib approximation according to 
+               (ZTA(J)*ZDU(J)**2)              ! Richardson Bulk number Rib approximation according to 
                                                  ! Grachev and Fairall (1997, JAM) equation (11)
   !
   IF (ZRIBU(J)<0.) THEN

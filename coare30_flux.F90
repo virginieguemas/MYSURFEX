@@ -502,8 +502,7 @@ DO J=1,SIZE(PTA)
       ZTAC(J)  = ZTA(J)-XTT                    ! atmospheric temperature in Celsius degrees
       !
       ZXLR(J)  = XLVTT + (XCPV-XCL)* ZTAC(J)   ! latent heat of vaporisation at rain temperature
-      ZDQSDT(J)= ZQASAT(J) * ZXLR(J) / (XRD*ZTA(J)**2)                  ! Clausius-Clapeyron relation
-      ! Shouldn't it be XRV instead of XRD ?
+      ZDQSDT(J)= ZQASAT(J) * ZXLR(J) / (XRV*ZTA(J)**2)                  ! Clausius-Clapeyron relation
       ZDTMP(J) = (1.0 + 3.309e-3*ZTAC(J) -1.44e-6*ZTAC(J)*ZTAC(J)) * &  ! heat diffusivity in air
                   0.02411 / (PRHOA(J)*XCPD)
       !

@@ -6,6 +6,7 @@
       SUBROUTINE DEFAULT_SEAFLUX(PTSTEP,POUT_TSTEP,HSEA_ALB,HSEA_FLUX,   &
                                    HSEA_SFCO2,                           &
                                    OPWG, OPRECIP, OPWEBB, KZ0, KGRVWAVES,&
+                                   HPSISTAB,HPSIUNSTAB,PGAMMA,           &
                                    OPROGSST, KTIME_COUPLING,POCEAN_TSTEP,&
                                    PICHCE, HINTERPOL_SST, HINTERPOL_SSS  )  
 !     ########################################################################
@@ -67,6 +68,9 @@ LOGICAL,           INTENT(OUT) :: OPRECIP       ! precipitation correction
 LOGICAL,           INTENT(OUT) :: OPWEBB        ! Webb correction
 INTEGER,           INTENT(OUT) :: KZ0           ! PZ0SEA formulation
 INTEGER,           INTENT(OUT) :: KGRVWAVES     ! Wave gravity in roughness length
+CHARACTER(LEN=17), INTENT(OUT) :: HPSISTAB      ! psi function formulation for positive zeta = z/L
+CHARACTER(LEN=13), INTENT(OUT) :: HPSIUNSTAB    ! psi function formulation for negative zeta = z/L
+REAL,              INTENT(OUT) :: PGAMMA        ! gamma factor in log-linear expression for psi
 LOGICAL,           INTENT(OUT) :: OPROGSST      !two-way coupling
 INTEGER,           INTENT(OUT) :: KTIME_COUPLING!coupling frequency
 REAL,              INTENT(OUT) :: PICHCE        !CE coef calculation for ECUME
@@ -95,6 +99,10 @@ OPWEBB  = .FALSE.
 !
 KZ0 = 0
 KGRVWAVES = 0
+!
+HPSISTAB = "ORIGINAL         "
+HPSIUNSTAB = "ORIGINAL     "
+PGAMMA = 4.7
 !
 OPROGSST = .FALSE.
 KTIME_COUPLING = 300

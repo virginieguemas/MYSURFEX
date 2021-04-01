@@ -68,7 +68,7 @@ LOGICAL  :: LDIAG_SEAICE
 INTEGER  :: NZ0
 INTEGER  :: NGRVWAVES
  CHARACTER(LEN=17) :: CPSISTAB     ! psi function formulation for positive zeta = z/L
- CHARACTER(LEN=14) :: CPSIUNSTAB   ! psi function formulation for negative zeta = z/L
+ CHARACTER(LEN=13) :: CPSIUNSTAB   ! psi function formulation for negative zeta = z/L
 REAL     :: XGAMMA                 ! gamma factor in log-linear expression for psi
 REAL     :: XICHCE
  CHARACTER(LEN=6)  :: CCH_DRY_DEP

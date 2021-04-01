@@ -121,14 +121,14 @@ PSIFCTU(:) = 0.
 !
 SELECT CASE (CPSISTAB)
 
-  CASE ('LOGLIN')             ! Log-linear expression for psi as given in
+  CASE ('LOGLINEAR        ')  ! Log-linear expression for psi as given in
     DO JJ=1,SIZE(PZL)         ! Dyer and Hicks (1970) and Dyer (1974) review
       IF(PZL(JJ)>0.) THEN
         PSIFCTU(JJ) = -XGAMMA*PZL(JJ)
       ENDIF
     ENDDO
 
-  CASE ('LETTAU79')           ! Lettau (1979)
+  CASE ('LETTAU79         ')  ! Lettau (1979)
     DO JJ=1,SIZE(PZL)
       IF(PZL(JJ)>0.) THEN
         ZX(JJ) = 1+4.5*PZL(JJ)
@@ -137,7 +137,7 @@ SELECT CASE (CPSISTAB)
       ENDIF
     ENDDO
 
-  CASE ('HOLTSLAG-BRUIN')     ! Holtslag and de Bruin (1988)
+  CASE ('HOLTSLAG-BRUIN   ')  ! Holtslag and de Bruin (1988)
     DO JJ=1,SIZE(PZL)
       IF(PZL(JJ)>0.) THEN
         PSIFCTU(JJ) = -3.75/0.35 -0.7*PZL(JJ) + 3.75/0.35*EXP(-0.35*PZL(JJ)) &
@@ -153,7 +153,7 @@ SELECT CASE (CPSISTAB)
       ENDIF
     ENDDO
 
-  CASE ('GRACHEV07')          ! Grachev (2007) fit obtained from SHEBA Arctic
+  CASE ('GRACHEV07        ')  ! Grachev (2007) fit obtained from SHEBA Arctic
     DO JJ=1,SIZE(PZL)         ! campaign (1997-1998)
       IF(PZL(JJ)>0.) THEN
         ZX(JJ) = (PZL(JJ)+1)**(1./3.)
@@ -185,7 +185,7 @@ SELECT CASE (CPSIUNSTAB)
       ENDIF
     ENDDO
 
-  CASE ('FAIRALL96')        ! Fairall et al (1996)
+  CASE ('FAIRALL96    ')    ! Fairall et al (1996)
     DO JJ=1,SIZE(PZL)
       IF(PZL(JJ)<0.) THEN
         ZX(JJ) = (1 -16*PZL(JJ))**(-0.25)          ! Businger-Dyer
@@ -202,7 +202,7 @@ SELECT CASE (CPSIUNSTAB)
       ENDIF
     ENDDO
 
-  CASE ('GRACHEV00')       ! Grachev et al (2000) used in COARE3.0
+  CASE ('GRACHEV00    ')    ! Grachev et al (2000) used in COARE3.0
     DO JJ=1,SIZE(PZL)
       IF(PZL(JJ)<0.) THEN
         ZX(JJ) = (1 -16*PZL(JJ))**(-0.25)          ! Businger-Dyer
@@ -345,14 +345,14 @@ PSIFCTT(:) = 0.
 !
 SELECT CASE (CPSISTAB)
 
-  CASE ('LOGLIN')             ! Log-linear expression for psi as given in
+  CASE ('LOGLINEAR        ')  ! Log-linear expression for psi as given in
     DO JJ=1,SIZE(PZL)         ! Dyer and Hicks (1970) and Dyer (1974) review
       IF(PZL(JJ)>0.) THEN
         PSIFCTT(JJ) = -XGAMMA*PZL(JJ)
       ENDIF
     ENDDO
 
-  CASE ('LETTAU79')           ! Lettau (1979)
+  CASE ('LETTAU79         ')  ! Lettau (1979)
     DO JJ=1,SIZE(PZL)
       IF(PZL(JJ)>0.) THEN
         ZX(JJ) = 1+4.5*PZL(JJ)
@@ -361,7 +361,7 @@ SELECT CASE (CPSISTAB)
       ENDIF
     ENDDO
 
-  CASE ('HOLTSLAG-BRUIN')     ! Holtslag and de Bruin (1988)
+  CASE ('HOLTSLAG-BRUIN   ')  ! Holtslag and de Bruin (1988)
     DO JJ=1,SIZE(PZL)
       IF(PZL(JJ)>0.) THEN
         PSIFCTT(JJ) = -3.75/0.35 -0.7*PZL(JJ) + 3.75/0.35*EXP(-0.35*PZL(JJ)) &
@@ -377,7 +377,7 @@ SELECT CASE (CPSISTAB)
       ENDIF
     ENDDO
 
-  CASE ('GRACHEV07')          ! Grachev (2007) fit obtained from SHEBA Arctic
+  CASE ('GRACHEV07        ')  ! Grachev (2007) fit obtained from SHEBA Arctic
     DO JJ=1,SIZE(PZL)         ! campaign (1997-1998)
       IF(PZL(JJ)>0.) THEN
         ZX(JJ) = (PZL(JJ)+1)**(1./3.)
@@ -407,7 +407,7 @@ SELECT CASE (CPSIUNSTAB)
       ENDIF
     ENDDO
 
-  CASE ('FAIRALL96')        ! Fairall et al (1996)
+  CASE ('FAIRALL96    ')    ! Fairall et al (1996)
     DO JJ=1,SIZE(PZL)
       IF(PZL(JJ)<0.) THEN
         ZX(JJ) = (1 -16*PZL(JJ))**(-0.5)           ! Businger-Dyer
@@ -423,7 +423,7 @@ SELECT CASE (CPSIUNSTAB)
       ENDIF
     ENDDO
 
-  CASE ('GRACHEV00')       ! Grachev et al (2000) used in COARE3.0
+  CASE ('GRACHEV00    ')    ! Grachev et al (2000) used in COARE3.0
     DO JJ=1,SIZE(PZL)
       IF(PZL(JJ)<0.) THEN
         ZX(JJ) = (1 -16*PZL(JJ))**(-0.5)           ! Businger-Dyer

@@ -88,7 +88,7 @@ TYPE SEAFLUX_t
   INTEGER                           :: NGRVWAVES   ! set to 0,1 or 2 according to the 
                                                    ! gravity waves model used in coare30_flux
   CHARACTER(LEN=17)                 :: CPSISTAB    ! psi function formulation for positive zeta = z/L
-  CHARACTER(LEN=14)                 :: CPSIUNSTAB  ! psi function formulation for negative zeta = z/L
+  CHARACTER(LEN=13)                 :: CPSIUNSTAB  ! psi function formulation for negative zeta = z/L
   REAL                              :: XGAMMA      ! gamma factor in log-linear expression for psi
   REAL                              :: XICHCE      ! CE coef calculation for ECUME
   LOGICAL                           :: LPERTFLUX   ! flag for stochastic flux perturbation
@@ -256,7 +256,7 @@ YSEAFLUX%LPWEBB=.FALSE.
 YSEAFLUX%NZ0=0
 YSEAFLUX%NGRVWAVES=0
 YSEAFLUX%CPSISTAB='ORIGINAL         '
-YSEAFLUX%CPSIUNSTAB='ORIGINAL      '
+YSEAFLUX%CPSIUNSTAB='ORIGINAL     '
 YSEAFLUX%XGAMMA=4.7
 YSEAFLUX%XICHCE=0.
 YSEAFLUX%LPERTFLUX=.FALSE.

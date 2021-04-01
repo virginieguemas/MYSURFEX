@@ -15,7 +15,7 @@
 !!    PURPOSE
 !!    -------
 !      Calculate the surface fluxes of heat, moisture, and momentum over
-!      sea surface with bulk algorithm COARE3.0. 
+!      sea surface with COARE3.0 bulk algorithm.
 !     
 !!**  METHOD
 !!    ------

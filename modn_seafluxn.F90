@@ -10,7 +10,7 @@
 !!
 !!    PURPOSE
 !!    -------
-!       The purpose of this module is to specify  the namelist NAM_SEAFLUX_n
+!       The purpose of this module is to specify the namelist NAM_SEAFLUX_n
 !
 !!
 !!**  IMPLICIT ARGUMENTS
@@ -29,9 +29,10 @@
 !!      Original    01/2004                    
 !!      Modified    01/2006 : sea flux parameterization.
 !!      Modified    08/2009 : LSURF_BUDGETC
-!!      Modified    01/2014 : S. Senesi : introduce sea-ice model
-!!      Modified    03/2014 : S. Belamari - add NZ0 (to choose PZ0SEA formulation)
-!!      R. Séférian    11/16 : Implement carbon cycle coupling (Earth system model)
+!!      S. Senesi   01/2014 : introduce sea-ice model
+!!      S. Belamari 03/2014 : add NZ0 (to choose PZ0SEA formulation)
+!!      R. Séférian 11/2016 : Implement carbon cycle coupling (Earth system model)
+!!      V. Guemas   04/2021 : Options to choose psi function in COARE3.0
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -66,9 +67,9 @@ LOGICAL  :: LDIAG_OCEAN
 LOGICAL  :: LDIAG_SEAICE
 INTEGER  :: NZ0
 INTEGER  :: NGRVWAVES
-CHARACTER(LEN=20) :: CPSISTAB
-CHARACTER(LEN=20) :: CPSIUNSTAB
-REAL     :: XGAMMA = 4.7     ! gamma factor in log-linear expression for psi
+ CHARACTER(LEN=17) :: CPSISTAB     ! psi function formulation for positive zeta = z/L
+ CHARACTER(LEN=14) :: CPSIUNSTAB   ! psi function formulation for negative zeta = z/L
+REAL     :: XGAMMA                 ! gamma factor in log-linear expression for psi
 REAL     :: XICHCE
  CHARACTER(LEN=6)  :: CCH_DRY_DEP
 LOGICAL  :: LPROGSST
@@ -86,9 +87,10 @@ REAL     :: XSEAICE_TSTEP
 REAL     :: XCD_ICE_CST
 REAL     :: XSI_FLX_DRV
 !
-NAMELIST/NAM_SEAFLUXn/CSEA_FLUX,CSEA_ALB, LPWG, LPRECIP, LPWEBB, NGRVWAVES, &
-                      NZ0, LPROGSST, NTIME_COUPLING, XOCEAN_TSTEP, XICHCE, &
-                      CINTERPOL_SST, CINTERPOL_SSS, LPERTFLUX,CSEA_SFCO2
+NAMELIST/NAM_SEAFLUXn/CSEA_FLUX, CSEA_ALB, LPWG, LPRECIP, LPWEBB, NGRVWAVES, &
+                      NZ0, CPSISTAB, CPSIUNSTAB, LPROGSST, NTIME_COUPLING, &
+                      XOCEAN_TSTEP, XICHCE, CINTERPOL_SST, CINTERPOL_SSS, & 
+                      LPERTFLUX, CSEA_SFCO2
 NAMELIST/NAM_DIAG_SURFn/N2M,L2M_MIN_ZS,LSURF_BUDGET,LRAD_BUDGET, &
                           LSURF_BUDGETC,LRESET_BUDGETC,LCOEF,LSURF_VARS  
 NAMELIST/NAM_CH_SEAFLUXn/CCH_DRY_DEP
@@ -124,6 +126,9 @@ SUBROUTINE INIT_NAM_SEAFLUXn (O, S)
   LPWEBB = S%LPWEBB
   NZ0 = S%NZ0
   NGRVWAVES = S%NGRVWAVES
+  CPSISTAB = S%CPSISTAB
+  CPSIUNSTAB = S%CPSIUNSTAB
+  XGAMMA = S%XGAMMA
   LPROGSST = O%LPROGSST
   NTIME_COUPLING = O%NTIME_COUPLING
   XOCEAN_TSTEP = O%XOCEAN_TSTEP
@@ -157,6 +162,9 @@ SUBROUTINE UPDATE_NAM_SEAFLUXn (O, S)
   S%LPWEBB = LPWEBB
   S%NZ0 = NZ0
   S%NGRVWAVES = NGRVWAVES
+  S%CPSISTAB = CPSISTAB
+  S%CPSIUNSTAB = CPSIUNSTAB
+  S%XGAMMA = XGAMMA
   O%LPROGSST = LPROGSST
   O%NTIME_COUPLING = NTIME_COUPLING
   O%XOCEAN_TSTEP = XOCEAN_TSTEP

@@ -29,7 +29,8 @@
 !!      Original      01/2004
 !!      S. Senesi     01/2014  adapt to fractional seaice, and to seaice scheme
 !!      S. Belamari   03/2014  Include NZ0
-!!      R. Séférian    11/16 : Implement carbon cycle coupling (Earth system model)
+!!      R. Séférian   11/2016  Implement carbon cycle coupling (Earth system model)
+!       V. Guemas     04/2021  Option to choose psi function for COARE3
 !
 !*       0.   DECLARATIONS
 !             ------------
@@ -86,6 +87,9 @@ TYPE SEAFLUX_t
                                                    ! 0= ARPEGE / 1= Smith (1988) / 2= Direct
   INTEGER                           :: NGRVWAVES   ! set to 0,1 or 2 according to the 
                                                    ! gravity waves model used in coare30_flux
+  CHARACTER(LEN=17)                 :: CPSISTAB    ! psi function formulation for positive zeta = z/L
+  CHARACTER(LEN=14)                 :: CPSIUNSTAB  ! psi function formulation for negative zeta = z/L
+  REAL                              :: XGAMMA      ! gamma factor in log-linear expression for psi
   REAL                              :: XICHCE      ! CE coef calculation for ECUME
   LOGICAL                           :: LPERTFLUX   ! flag for stochastic flux perturbation
 !
@@ -251,6 +255,9 @@ YSEAFLUX%LPRECIP=.FALSE.
 YSEAFLUX%LPWEBB=.FALSE.
 YSEAFLUX%NZ0=0
 YSEAFLUX%NGRVWAVES=0
+YSEAFLUX%CPSISTAB='ORIGINAL         '
+YSEAFLUX%CPSIUNSTAB='ORIGINAL      '
+YSEAFLUX%XGAMMA=4.7
 YSEAFLUX%XICHCE=0.
 YSEAFLUX%LPERTFLUX=.FALSE.
 YSEAFLUX%JSX=0

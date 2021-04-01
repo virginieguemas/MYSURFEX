@@ -49,7 +49,8 @@
 !!      S. Belamari 03/2014 : add NZ0 (to choose PZ0SEA formulation)
 !!      R. Séférian 01/2015 : introduce interactive ocean surface albedo
 !!      A. Voldoire 09/2016 : Switch to tile the fluxes calculation over sea and seaice
-!!      R. Séférian    11/16 : Implement carbon cycle coupling (Earth system model)
+!!      R. Séférian 11/2016 : Implement carbon cycle coupling (Earth system model)
+!!      V. Guemas   04/2021 : Option to change psi function for COARE3 algorithm
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -188,8 +189,8 @@ IF (LNAM_READ) THEN
  !      
  
  CALL DEFAULT_SEAFLUX(SM%S%XTSTEP,SM%S%XOUT_TSTEP,SM%S%CSEA_ALB,SM%S%CSEA_FLUX,         &
-                      SM%S%CSEA_SFCO2, SM%S%LPWG,                                       &
-                      SM%S%LPRECIP,SM%S%LPWEBB,SM%S%NZ0,SM%S%NGRVWAVES,SM%O%LPROGSST,   &
+                      SM%S%CSEA_SFCO2, SM%S%LPWG, SM%S%LPRECIP,SM%S%LPWEBB,SM%S%NZ0,    &
+                      SM%S%NGRVWAVES,SM%CPSISTAB,SM%CPSIUNSTAB,SM%XGAMMA SM%O%LPROGSST, &
                       SM%O%NTIME_COUPLING,SM%O%XOCEAN_TSTEP,SM%S%XICHCE,SM%S%CINTERPOL_SST,&
                       SM%S%CINTERPOL_SSS                            )
  CALL DEFAULT_SEAICE(HPROGRAM,                                   &

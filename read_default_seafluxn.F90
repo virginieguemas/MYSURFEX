@@ -34,9 +34,10 @@
 !!    -------------
 !!      Original    01/2003 
 !!      Modified    01/2006 : sea flux parameterization.
-!!      Modified    09/2013 : S. Senesi : introduce sea-ice scheme
-!!      Modified    01/2015 : R. Séférian : introduce ocean surface albedo 
-!!      Modified    11/2016 : R. Séférian: introduce carbon cycle coupling (Earth system model)
+!!      S. Senesi   09/2013 : introduce sea-ice scheme
+!!      R. Séférian 01/2015 : introduce ocean surface albedo 
+!!      R. Séférian 11/2016 : introduce carbon cycle coupling (Earth system model)
+!!      V. Guemas   04/2021 : choice of psi function for COARE3.0 algorithm
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -136,6 +137,10 @@ IF (LNAM_READ) THEN
  CALL TEST_NAM_VAR_SURF(ILUOUT,'CINTERPOL_SSS',CINTERPOL_SSS,'LINEAR','UNIF  ','QUADRA','NONE  ')
  CALL TEST_NAM_VAR_SURF(ILUOUT,'CINTERPOL_SIC',CINTERPOL_SIC,'LINEAR','UNIF  ','NONE  ')
  CALL TEST_NAM_VAR_SURF(ILUOUT,'CINTERPOL_SIT',CINTERPOL_SIT,'LINEAR','UNIF  ','NONE  ') 
+ CALL TEST_NAM_VAR_SURF(ILUOUT,'CPSISTAB',CPSISTAB,'LOGLINEAR       ','LETTAU79        ',&
+         'HOLTSLAG-BRUIN  ','BELJAARS-HOLTSLAG','GRACHEV07       ','ORIGINAL        ') 
+ CALL TEST_NAM_VAR_SURF(ILUOUT,'CPSIUNSTAB',CPSIUNSTAB,'BUSINGER-DYER','FAIRALL96    ',&
+         'GRACHEV00    ','ORIGINAL     ')
 
 ENDIF
 !

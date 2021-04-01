@@ -164,13 +164,17 @@ SELECT CASE (CPSISTAB)
       ENDIF
     ENDDO
 
-  CASE DEFAULT                ! Maintained for backward compatibility
+  CASE ('ORIGINAL         ')  ! Maintained for backward compatibility
     DO JJ=1,SIZE(PZL)         ! Formulation initially used with COARE3.0
       IF(PZL(JJ)>0.) THEN     ! in SURFEX since 2005
         ZC(JJ)=MIN(50.,0.35*PZL(JJ))
         PSIFCTU(JJ)=-((1.+1.*PZL(JJ))**1. + 0.6667*(PZL(JJ)-14.28)/EXP(ZC(JJ)) + 8.525)
       ENDIF
     ENDDO
+
+  CASE DEFAULT
+    PRINT*,'Warning : CPSISTAB mispelled'
+    PRINT*,'          No stability correction applied'
 
 END SELECT
 
@@ -219,7 +223,7 @@ SELECT CASE (CPSIUNSTAB)
       ENDIF
     ENDDO
 
-  CASE DEFAULT                ! Maintained for backward compatibility
+  CASE ('ORIGINAL     ')      ! Maintained for backward compatibility
     DO JJ=1,SIZE(PZL)         ! Formulation initially used with COARE3.0
       IF(PZL(JJ)<0.) THEN     ! in SURFEX since 2005
         ZX(JJ)   = (1.0 - 15. * PZL(JJ))**0.25         ! Kansas unstable
@@ -238,6 +242,10 @@ SELECT CASE (CPSIUNSTAB)
         PSIFCTU(JJ)=(1.-ZF(JJ)) * ZPSIK(JJ) + ZF(JJ) * ZPSIC(JJ)
       ENDIF
     ENDDO
+
+  CASE DEFAULT
+    PRINT*,'Warning : CPSIUNSTAB mispelled'
+    PRINT*,'          No stability correction applied'
 
 END SELECT
 
@@ -387,13 +395,17 @@ SELECT CASE (CPSISTAB)
       ENDIF
     ENDDO
 
-  CASE DEFAULT                ! Maintained for backward compatibility
+  CASE ('ORIGINAL         ')  ! Maintained for backward compatibility
     DO JJ=1,SIZE(PZL)         ! Formulation initially used with COARE3.0
       IF(PZL(JJ)>0.) THEN     ! in SURFEX since 2005
         ZC(JJ)=MIN(50.,0.35*PZL(JJ))
         PSIFCTT(JJ)=-((1.+2.*PZL(JJ)/3.)**1.5 + 0.6667*(PZL(JJ)-14.28)/EXP(ZC(JJ)) + 8.525)
       ENDIF
     ENDDO
+
+  CASE DEFAULT
+    PRINT*,'Warning : CPSISTAB mispelled'
+    PRINT*,'          No stability correction applied'
 
 END SELECT
 
@@ -439,7 +451,7 @@ SELECT CASE (CPSIUNSTAB)
       ENDIF
     ENDDO
 
-  CASE DEFAULT                ! Maintained for backward compatibility
+  CASE ('ORIGINAL     ')      ! Maintained for backward compatibility
     DO JJ=1,SIZE(PZL)         ! Formulation initially used with COARE3.0
       IF(PZL(JJ)<0.) THEN     ! in SURFEX since 2005
         ZX(JJ)   = (1. - 15. * PZL(JJ))**.5         ! Kansas unstable
@@ -455,6 +467,10 @@ SELECT CASE (CPSIUNSTAB)
         PSIFCTT(JJ)= (1.-ZF(JJ)) * ZPSIK(JJ) + ZF(JJ) * ZPSIC(JJ)
       ENDIF
     ENDDO
+
+  CASE DEFAULT
+    PRINT*,'Warning : CPSIUNSTAB mispelled'
+    PRINT*,'          No stability correction applied'
 
 END SELECT
 

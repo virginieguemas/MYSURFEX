@@ -48,9 +48,9 @@
 !!      (P. Tulet)    01/10/03  aerodynamical resistance output
 !!      (P. LeMoigne) 29/03/04  bug in the heat flux computation
 !!      (P. LeMoigne) 09/02/06  Z0H as output
-!!      B. Decharme    06/2009  limitation of Ri
-!!      Modified       09/2009  B. Decharme: limitation of Ri in surface_ri.F90
-!!      S.Senesi       01/2014  use XCD_ICE_CST (if /= 0) as value for for Cd, Cdn and Ch
+!!      (B. Decharme)    06/09  limitation of Ri
+!!      (B. Decharme)    09/09  limitation of Ri in surface_ri.F90
+!!      (S.Senesi)       01/14  use XCD_ICE_CST (if /= 0) as value for for Cd, Cdn and Ch
 !-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -81,35 +81,35 @@ IMPLICIT NONE
 !*      0.1    declarations of arguments
 !
 !
-REAL, DIMENSION(:), INTENT(IN)       :: PTA   ! air temperature at atm. level
-REAL, DIMENSION(:), INTENT(IN)       :: PQA   ! air humidity at atm. level (kg/kg)
-REAL, DIMENSION(:), INTENT(IN)       :: PEXNA ! Exner function at atm. level
-REAL, DIMENSION(:), INTENT(IN)       :: PRHOA ! air density at atm. level
-REAL, DIMENSION(:), INTENT(IN)       :: PVMOD ! module of wind at atm. wind level
-REAL, DIMENSION(:), INTENT(IN)       :: PZREF ! atm. level for temp. and humidity
-REAL, DIMENSION(:), INTENT(IN)       :: PUREF ! atm. level for wind
-REAL, DIMENSION(:), INTENT(IN)       :: PTICE ! Sea ice Surface Temperature
-REAL, DIMENSION(:), INTENT(IN)       :: PEXNS ! Exner function at sea surface
-REAL, DIMENSION(:), INTENT(IN)       :: PPS   ! air pressure at sea surface
-REAL, DIMENSION(:), INTENT(IN)       :: PRR   ! rain rate
-REAL, DIMENSION(:), INTENT(IN)       :: PRS   ! snow rate
+REAL, DIMENSION(:), INTENT(IN)       :: PTA   ! air temperature at PZREF atm. level (K)
+REAL, DIMENSION(:), INTENT(IN)       :: PQA   ! air humidity at PZREF atm. level (kg/kg)
+REAL, DIMENSION(:), INTENT(IN)       :: PEXNA ! Exner function at PZREF atm. level
+REAL, DIMENSION(:), INTENT(IN)       :: PRHOA ! air density at PZREF atm. level (kg/m3)
+REAL, DIMENSION(:), INTENT(IN)       :: PVMOD ! module of wind at PUREF atm. wind level (m/s)
+REAL, DIMENSION(:), INTENT(IN)       :: PZREF ! atm. level for temp. and humidity (m)
+REAL, DIMENSION(:), INTENT(IN)       :: PUREF ! atm. level for wind (m)
+REAL, DIMENSION(:), INTENT(IN)       :: PTICE ! Sea ice Surface Temperature (K)
+REAL, DIMENSION(:), INTENT(IN)       :: PEXNS ! Exner function at ice surface
+REAL, DIMENSION(:), INTENT(IN)       :: PPS   ! air pressure at ice and sea surface (Pa)
+REAL, DIMENSION(:), INTENT(IN)       :: PRR   ! rain rate (kg/s/m2)
+REAL, DIMENSION(:), INTENT(IN)       :: PRS   ! snow rate (kg/s/m2)
 !
-REAL, DIMENSION(:), INTENT(INOUT)    :: PZ0ICE! roughness length over the sea ice
+REAL, DIMENSION(:), INTENT(INOUT)    :: PZ0ICE! aerodynamical roughness length over sea ice
 !                                         
 !                                         
-!  surface fluxes : latent heat, sensible heat, friction fluxes
-REAL, DIMENSION(:), INTENT(OUT)      :: PSFTH ! heat flux  (W/m2)
-REAL, DIMENSION(:), INTENT(OUT)      :: PSFTQ ! water flux (kg/m2/s)
+!  surface fluxes : latent heat, sensible heat, momentum fluxes
+REAL, DIMENSION(:), INTENT(OUT)      :: PSFTH ! upward heat flux  (W/m2)
+REAL, DIMENSION(:), INTENT(OUT)      :: PSFTQ ! upward water flux (kg/m2/s)
 REAL, DIMENSION(:), INTENT(OUT)      :: PUSTAR! friction velocity (m/s)
 !
-! diagnostics
-REAL, DIMENSION(:), INTENT(OUT)      :: PQSAT ! humidity at saturation
-REAL, DIMENSION(:), INTENT(OUT)      :: PCD   ! momentum drag coefficient
-REAL, DIMENSION(:), INTENT(OUT)      :: PCDN  ! neutral momentum drag coefficient
-REAL, DIMENSION(:), INTENT(OUT)      :: PCH   ! heat drag coefficient
-REAL, DIMENSION(:), INTENT(OUT)      :: PRI   ! Richardson number
-REAL, DIMENSION(:), INTENT(OUT)      :: PRESA     ! aerodynamical resistance
-REAL, DIMENSION(:), INTENT(OUT)      :: PZ0HICE    ! heat roughness length
+!  diagnostics
+REAL, DIMENSION(:), INTENT(OUT)      :: PQSAT ! near ice saturation specific humidity
+REAL, DIMENSION(:), INTENT(OUT)      :: PCD   ! momentum transfer coefficient at PUREF
+REAL, DIMENSION(:), INTENT(OUT)      :: PCDN  ! neutral momentum transfer coefficient at PUREF
+REAL, DIMENSION(:), INTENT(OUT)      :: PCH   ! heat transfer coefficient at PZREF
+REAL, DIMENSION(:), INTENT(OUT)      :: PRI   ! bulk Richardson number
+REAL, DIMENSION(:), INTENT(OUT)      :: PRESA   ! aerodynamical resistance
+REAL, DIMENSION(:), INTENT(OUT)      :: PZ0HICE ! scalar roughness length over sea ice
 !
 !
 !*      0.2    declarations of local variables
@@ -144,51 +144,46 @@ PUSTAR(:)=XUNDEF
 PRESA(:)=XUNDEF
 !
 !
-!       1.1    Saturated specified humidity near the water surface
-!              ---------------------------------------------------
+!       1.1    Saturation specific humidity above sea ice
+!              -------------------------------------------
 !
 PQSAT(:) = QSAT(PTICE(:),PPS(:))
 !
-!-------------------------------------------------------------------------------
-!
-!       2.     Calculate the drag coefficient for momentum (PCD)
-!              -------------------------------------------------
-!
-!       2.1    Richardson number
-!              -----------------
-!
-
- CALL SURFACE_RI(PTICE,PQSAT,PEXNS,PEXNA,PTA,PQA, &
-                  PZREF, PUREF, ZDIRCOSZW,PVMOD,PRI)
-!                  
-!
-!       2.2    Z0 for  sea ice
-!              --------------------
-!
-PZ0HICE(:) = XZ0HSN
-!
-PZ0ICE (:) = XZ0SN
-!
-!-------------------------------------------------------------------------------
-!
-!       3.     Drag coefficient for heat and aerodynamical resistance
-!              ----------------
-!
+!       1.2    Minimum wind value depending on height
+!              ---------------------------------------
 ZVMOD(:)=WIND_THRESHOLD(PVMOD(:),PUREF(:))
 !
-IF ( XCD_ICE_CST == 0.0 ) THEN 
+!-------------------------------------------------------------------------------
 !
+!       2.     Transfer coefficients for momentum, heat and moisture
+!              -----------------------------------------------------
+!
+!
+IF ( XCD_ICE_CST == 0.0 ) THEN ! Namelist parameter to allow backward compatibility
+  !
+  PZ0HICE(:) = XZ0HSN ! scalar roughness length which can be selected in
+                      ! NAM_SURF_SNOW_CSTS. Default : 1E-4
+  PZ0ICE (:) = XZ0SN  ! aerodynamic roughness length which can be selected in
+                      ! NAM_SURF_SNOW_CSTS. Default : 1E-3
+  !
   IF (LDRAG_COEF_ARP) THEN
-!
+     ! Computation of transfer coefficients for momentum, heat and moisture
+     ! following the formulation which was in ARPEGE/ALADIN
      CALL SURFACE_CDCH_1DARP(PZREF, PZ0ICE, PZ0HICE , ZVMOD, PTA, PTICE, &
                              PQA, PQSAT, PCD, PCDN, PCH                 )  
 !
      ZRA(:) = 1. / ( PCH(:) * ZVMOD(:) )
 !
   ELSE
+     ! Calculate the bulk Richardson number
+     CALL SURFACE_RI(PTICE,PQSAT,PEXNS,PEXNA,PTA,PQA, &
+                     PZREF, PUREF, ZDIRCOSZW,PVMOD,PRI)
 
+     ! Computation of transfer coefficient for momentum following formulations
+     ! for land surfaces
      CALL SURFACE_CD(PRI, PZREF, PUREF, PZ0ICE, PZ0HICE, PCD, PCDN)
-!
+     ! Computation of transfer coefficient for heat and moisture following
+     ! formulations for land surfaces
      CALL SURFACE_AERO_COND(PRI, PZREF, PUREF, ZVMOD, PZ0ICE, PZ0HICE, ZAC, ZRA, PCH)
 !
   ENDIF
@@ -211,8 +206,9 @@ ZUSTAR2(:) = PCD(:)*ZVMOD(:)*ZVMOD(:)
 !
 PRESA(:) = ZRA(:)
 !
-IF (LRRGUST_ARP) THEN
-  ZFP(:)=MAX(0.0,PRR(:)+PRS(:))
+IF (LRRGUST_ARP) THEN ! Correction of CD, CH, CDN due to moist gustiness
+                      ! References ?
+  ZFP(:)=MAX(0.0,PRR(:)+PRS(:))  ! Total precipitation
   ZRRCOR(:)=SQRT(1.0+((((ZFP(:)/(ZFP(:)+XRRSCALE))**XRRGAMMA)*XUTILGUST)**2) &
       /(PCD(:)*ZVMOD(:)**2))  
 
@@ -223,12 +219,21 @@ ENDIF
 !
 !-------------------------------------------------------------------------------
 !
-!       4.     The fluxes
-!              ----------
+!       3.     Accounting for form drag following Lupkes and Gryanik (2015)
+!              ------------------------------------------------------------
+
+
+
+!
+!-------------------------------------------------------------------------------
+!
+!       4.     Upward fluxes of heat and moisture, downward momentum flux
+!              -----------------------------------------------------------
 !
 PSFTH (:) =  XCPD * PRHOA(:) * PCH(:) * ZVMOD(:) * ( PTICE(:) -PTA(:) * PEXNS(:) / PEXNA(:) ) / PEXNS(:)
 ! Using Heat transfer coefficient CH for vapor transfer coefficient CE !
 PSFTQ (:) =  PRHOA(:) * PCH(:) * ZVMOD(:) * ( PQSAT(:)-PQA(:) )
+! Missing Lv - latent heat of vaporization / sublimation
 PUSTAR(:) = SQRT(ZUSTAR2(:))
 !
 IF (LHOOK) CALL DR_HOOK('ICE_SEA_FLUX',1,ZHOOK_HANDLE)

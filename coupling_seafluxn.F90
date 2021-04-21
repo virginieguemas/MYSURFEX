@@ -193,10 +193,12 @@ REAL, DIMENSION(KI) :: ZV         ! meridian wind
 REAL, DIMENSION(KI) :: ZWIND      ! Wind
 REAL, DIMENSION(KI) :: ZCD        ! Drag coefficient on open sea
 REAL, DIMENSION(KI) :: ZCD_ICE    ! "     "          on seaice
+REAL, DIMENSION(KI) :: ZCDF       ! "     "          related to form drag
 REAL, DIMENSION(KI) :: ZCDN       ! Neutral Drag coefficient on open sea
 REAL, DIMENSION(KI) :: ZCDN_ICE   ! "     "          on seaice
 REAL, DIMENSION(KI) :: ZCH        ! Heat transfer coefficient on open sea
 REAL, DIMENSION(KI) :: ZCH_ICE    ! "     "          on seaice
+REAL, DIMENSION(KI) :: ZCHF       ! "     "          related to form drag
 REAL, DIMENSION(KI) :: ZCE        ! Vaporization heat transfer coefficient on open sea
 REAL, DIMENSION(KI) :: ZCE_ICE    ! "     "          on seaice
 REAL, DIMENSION(KI) :: ZRI        ! Richardson number on open sea
@@ -222,6 +224,10 @@ REAL, DIMENSION(KI) :: ZSFTH_ICE  ! Heat flux on sea ice
 REAL, DIMENSION(KI) :: ZSFTQ_ICE  ! Sea-ice sublimation flux
 REAL, DIMENSION(KI) :: ZSFU_ICE   ! zonal      momentum flux on seaice (Pa)
 REAL, DIMENSION(KI) :: ZSFV_ICE   ! meridional momentum flux on seaice (Pa)
+REAL, DIMENSION(KI) :: ZSFU_FORM  ! zonal momentum flux due to drag form over a mixture of ice and ocean(Pa)
+REAL, DIMENSION(KI) :: ZSFV_FORM  ! meridional momentum flux due to drag form (Pa)
+REAL, DIMENSION(KI) :: ZSFTH_FORM ! Sensible heat flux due to drag form (W/m2) 
+REAL, DIMENSION(KI) :: ZSFTQ_FORM ! Upward water flux due to drag form (kg/m2/s)
 
 REAL, DIMENSION(KI) :: ZHU        ! Near surface relative humidity
 REAL, DIMENSION(KI) :: ZQA        ! specific humidity (kg/kg)
@@ -278,8 +284,10 @@ ZMASK    (:) = 0.
 ZSFTQ_ICE(:) = XUNDEF
 ZSFTH_ICE(:) = XUNDEF
 ZCD_ICE  (:) = XUNDEF    
+ZCDF     (:) = XUNDEF    
 ZCDN_ICE (:) = XUNDEF
 ZCH_ICE  (:) = XUNDEF
+ZCHF     (:) = XUNDEF
 ZCE_ICE  (:) = XUNDEF
 ZRI_ICE  (:) = XUNDEF
 ZRESA_SEA_ICE= XUNDEF
@@ -287,6 +295,7 @@ ZUSTAR_ICE(:) = XUNDEF
 ZZ0_ICE  (:) = XUNDEF
 ZZ0H_ICE (:) = XUNDEF
 ZQSAT_ICE(:) = XUNDEF
+!
 !
 ZEMIS    (:) = XUNDEF
 ZTRAD    (:) = XUNDEF
@@ -449,6 +458,21 @@ IF(SM%S%LHANDLE_SIC)THEN
 ! Momentum fluxes over sea-ice if embedded seaice scheme is used
   CALL SEA_MOMENTUM_FLUXES(ZCD_ICE, ZSFU_ICE, ZSFV_ICE)
 !
+  IF (SM%S%LFORMDRAG) THEN
+
+    ! ZZ0SEA to be recovered from coare_fluxes
+    ! ZZ0ICE from ice_flux or coupling_ice_fluxes
+    ! LMO I/O from turbulent fluxes over I/O 
+    ! ZRATIO from andreas model
+
+    CALL FORM_DRAG(SM, ZZ0SEA, ZZ0ICE, PUREF, PZREF, ZLMOI, ZLMOO, &
+           ZRATIO, ZCDF, ZCHF) 
+
+    CALL SEA_MOMENTUM_FLUXES(ZCDF, ZSFU_FORM, ZSFV_FORM)
+
+    CALL LATENT_SENSIBLE_HEAT_FLUXES(ZCHF, ZSFTH_FORM, ZSFTQ_FORM)
+
+  ENDIF
 ENDIF
 !
 !-------------------------------------------------------------------------------------
@@ -572,6 +596,15 @@ IF (SM%S%LHANDLE_SIC) THEN
    PSFTQ  (:) = ZSFTQ (:) * ( 1.0 - SM%S%XSIC (:)) + ZSFTQ_ICE(:) * SM%S%XSIC(:)
    PSFU   (:) = ZSFU  (:) * ( 1.0 - SM%S%XSIC (:)) +  ZSFU_ICE(:) * SM%S%XSIC(:)
    PSFV   (:) = ZSFV  (:) * ( 1.0 - SM%S%XSIC (:)) +  ZSFV_ICE(:) * SM%S%XSIC(:)
+
+   IF (SM%S%LFORMDRAG) THEN
+
+     PSFTH (:) = PSFTH (:) + ZSFTH_FORM (:)
+     PSFTQ (:) = PSFTQ (:) + ZSFTQ_FORM (:)
+     PSFU  (:) = PSFU  (:) + ZSFU_FORM  (:)
+     PSFV  (:) = PSFV  (:) + ZSFV_FORM  (:)
+
+   ENDIF
 ELSE
    PSFTH  (:) = ZSFTH (:) 
    PSFTQ  (:) = ZSFTQ (:) 
@@ -823,6 +856,24 @@ IF (LHOOK) CALL DR_HOOK('COUPLING_SEAFLUX_N: COMPLEMENT_EACH_OTHER_FLUX',0,ZHOOK
 IF (LHOOK) CALL DR_HOOK('COUPLING_SEAFLUX_N: COMPLEMENT_EACH_OTHER_FLUX',1,ZHOOK_HANDLE)
 !
 END SUBROUTINE COMPLEMENT_EACH_OTHER_FLUX
+!
+!=======================================================================================
+!
+SUBROUTINE LATENT_SENSIBLE_HEAT_FLUXES (PCH, PSHF, PWF) 
+!
+IMPLICIT NONE
+!
+REAL, DIMENSION(KI), INTENT(IN)  :: PCH       ! Heat transfer coefficient 
+REAL, DIMENSION(KI), INTENT(OUT) :: PSHF      ! Upward sensible heat fluxes (W/m2)
+REAL, DIMENSION(KI), INTENT(OUT) :: PWF       ! Upward water fluxes (kg/m2/s)
+
+PSFH (:) = XCPD * PRHOA(:) * PCH(:) * ZWIND(:) * ( SM%S%XTICE(:) -PTA(:) * ZEXNS(:) / ZEXNA(:) ) / ZEXNS(:)
+PWF  (:) = PRHOA(:) * PCH(:) * ZWIND(:) * ( ZQSAT_ICE(:)-ZQA(:) )
+! No Lv because this is the moisture flux and not the latent heat flux
+
+
+!
+END SUBROUTINE LATENT_SENSIBLE_HEAT_FLUXES
 !
 !=======================================================================================
 !

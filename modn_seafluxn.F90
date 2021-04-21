@@ -70,6 +70,12 @@ INTEGER  :: NGRVWAVES
  CHARACTER(LEN=17) :: CPSISTAB     ! psi function formulation for positive zeta = z/L
  CHARACTER(LEN=13) :: CPSIUNSTAB   ! psi function formulation for negative zeta = z/L
 REAL     :: XGAMMA                 ! gamma factor in log-linear expression for psi
+LOGICAL  :: LFORMDRAG              ! whether form drag turbulent fluxes should be accounted for
+REAL     :: XCE                    ! effective coefficient of resistance of an  
+                                   ! individual floe or pond edge
+REAL     :: XBETAFORM              ! beta factor determining the shape of the equation for the
+                                   ! typical diameter of floes or ponds as a function of sea 
+                                   ! ice concentration
 REAL     :: XICHCE
  CHARACTER(LEN=6)  :: CCH_DRY_DEP
 LOGICAL  :: LPROGSST
@@ -129,6 +135,9 @@ SUBROUTINE INIT_NAM_SEAFLUXn (O, S)
   CPSISTAB = S%CPSISTAB
   CPSIUNSTAB = S%CPSIUNSTAB
   XGAMMA = S%XGAMMA
+  LFORMDRAG = S%LFORMDRAG
+  XCE = S%XCE
+  XBETAFORM = S%XBETAFORM
   LPROGSST = O%LPROGSST
   NTIME_COUPLING = O%NTIME_COUPLING
   XOCEAN_TSTEP = O%XOCEAN_TSTEP
@@ -165,6 +174,9 @@ SUBROUTINE UPDATE_NAM_SEAFLUXn (O, S)
   S%CPSISTAB = CPSISTAB
   S%CPSIUNSTAB = CPSIUNSTAB
   S%XGAMMA = XGAMMA
+  S%LFORMDRAG = LFORMDRAG
+  S%XCE = XCE
+  S%XBETAFORM = XBETAFORM
   O%LPROGSST = LPROGSST
   O%NTIME_COUPLING = NTIME_COUPLING
   O%XOCEAN_TSTEP = XOCEAN_TSTEP

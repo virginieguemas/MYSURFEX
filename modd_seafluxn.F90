@@ -90,6 +90,11 @@ TYPE SEAFLUX_t
   CHARACTER(LEN=17)                 :: CPSISTAB    ! psi function formulation for positive zeta = z/L
   CHARACTER(LEN=13)                 :: CPSIUNSTAB  ! psi function formulation for negative zeta = z/L
   REAL                              :: XGAMMA      ! gamma factor in log-linear expression for psi
+  LOGICAL                           :: LFORMDRAG   ! form drag turbulent flux contribution
+  REAL                              :: XCE         ! effective resistance of floe/pond edges
+  REAL                              :: XBETAFORM   ! beta factor determining the shape of 
+                                                   ! diameter of floes/ponds as a function of 
+                                                   ! sea ice concentration
   REAL                              :: XICHCE      ! CE coef calculation for ECUME
   LOGICAL                           :: LPERTFLUX   ! flag for stochastic flux perturbation
 !
@@ -258,6 +263,9 @@ YSEAFLUX%NGRVWAVES=0
 YSEAFLUX%CPSISTAB='ORIGINAL         '
 YSEAFLUX%CPSIUNSTAB='ORIGINAL     '
 YSEAFLUX%XGAMMA=4.7
+YSEAFLUX%LFORMDRAG=.FALSE.
+YSEAFLUX%XCE=0.4         ! As in Lupkes and Gryanik (2015)
+YSEAFLUX%XBETAFORM=1.4    ! As in Lupkes et al (2012) for inner Arctic
 YSEAFLUX%XICHCE=0.
 YSEAFLUX%LPERTFLUX=.FALSE.
 YSEAFLUX%JSX=0

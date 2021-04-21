@@ -3,7 +3,7 @@
 !SFX_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !SFX_LIC for details. version 1.
 !     #########
-     SUBROUTINE FORM_DRAG (SM, PZ0SEA, PZ0ICE, PUREF, PLMOI, PLMOO, &
+     SUBROUTINE FORM_DRAG (SM, PZ0SEA, PZ0ICE, PUREF, PZREF, PLMOI, PLMOO, &
                            PRATIO, PCDF, PCHF)
 !     #######################################################################
 !
@@ -61,12 +61,13 @@
 !*       0.     DECLARATIONS
 !               ------------
 !
-USE MODD_SURFEX_n, ONLY  : SEAFLUX_MODEL_t
+USE MODD_SURFEX_n,  ONLY : SEAFLUX_MODEL_t
 USE MODN_SEAFLUX_n, ONLY : XCE, XBETAFORM  
                          ! XCE = Effective coefficient of resistance of an 
                          ! individual floe or pond edge
                          ! XBETAFORM = beta factor determining the shape of ZDF
 USE MODE_COARE30_PSI     ! Stability correction functions psi as a function of zeta
+USE MODD_CSTS,      ONLY : XKARMAN
 !
 IMPLICIT NONE
 !
@@ -77,6 +78,7 @@ TYPE(SEAFLUX_MODEL_t), INTENT(IN) :: SM    ! contains sea ice concentration
 REAL, DIMENSION(:), INTENT(IN)   :: PZ0SEA ! skin drag coefficient over water
 REAL, DIMENSION(:), INTENT(IN)   :: PZ0ICE ! skin drag coefficient over ice
 REAL, DIMENSION(:), INTENT(IN)   :: PUREF  ! atmospheric height for wind speed
+REAL, DIMENSION(:), INTENT(IN)   :: PZREF  ! atmospheric height for temperature and moisture
 REAL, DIMENSION(:), INTENT(IN)   :: PLMOI  ! Monin-Obukhov length above ice
 REAL, DIMENSION(:), INTENT(IN)   :: PLMOO  ! Monin-Obukhov length above ocean
 REAL, DIMENSION(:), INTENT(IN)   :: PRATIO ! ratio between aerodynamic and scalar
@@ -91,13 +93,20 @@ REAL, DIMENSION(SIZE(PZ0SEA))    :: ZSC                  ! sheltering of atmosph
                                  ! between obstacles
 REAL, DIMENSION(SIZE(PZ0SEA))    :: ZDF                  ! characteristic length of floes
 REAL, DIMENSION(SIZE(PZ0SEA))    :: ZHF                  ! ice freeboard
-REAL, DIMENSION(SIZE(PZ0SEA))    :: ZPSIU                ! psi stability correction for
-                                 ! momentum
-REAL, DIMENSION(SIZE(PZ0SEA))    :: ZFI, ZFO             ! Louis correction of neutral 
+REAL, DIMENSION(SIZE(PZ0SEA))    :: ZPSIUI, ZPSIUO       ! psi stability correction for
+                                 ! momentum over ice and ocean
+REAL, DIMENSION(SIZE(PZ0SEA))    :: ZPSITI, ZPSITO       ! psi stability correction for
+                                 ! heat and moisture over ice and ocean
+REAL, DIMENSION(SIZE(PZ0SEA))    :: ZFIM, ZFOM           ! Louis correction of neutral 
                                  ! drag coefficients over ice and ocean
+REAL, DIMENSION(SIZE(PZ0SEA))    :: ZFIH, ZFOH           ! Louis correction of heat transfer 
+                                 ! coefficients over ice and ocean
 REAL, DIMENSION(SIZE(PZ0SEA))    :: ZCDFK                ! Part of neutral form drag 
 REAL, DIMENSION(SIZE(PZ0SEA))    :: ZCDNFI, ZCDNFO       ! Neutral form drag coefficients
                                  ! contributions from flow influenced by ice and ocean
+REAL, DIMENSION(SIZE(PZ0SEA))    :: ZCHNFI, ZCHNFO       ! Neutral transfer coefficients
+                                 ! for heat and moisture linked to form drag.
+                                 ! Contributions from flow influenced by ice and ocean
 !
 REAL :: ZHFC      ! mean ice freeboard (m)
 REAL :: ZDMIN     ! minimum floe length
@@ -109,7 +118,9 @@ REAL :: ZE        !
 !       1.     Initialization
 !              --------------
 !
-ZSIC = SM%S%XSIC
+ZSIC = SM%S%XSIC  ! Warning : This sea ice concentration currently do not account
+                  ! for the melt pond coverage (in future, we should change for
+                  ! ZSIC = SM%S%SIC - melt pond coverage
 ZHFC      = 0.41  ! Mean value of REFLEX Fram strait data (Lupkes et al, 2012)
 ZDMIN     = 8
 ZE        = EXP(1.0)
@@ -158,25 +169,54 @@ ZCDNFO(:) = ZCDFK(:) * ( LOG(ZHF(:) / (ZE*PZ0SEA(:))) / LOG(PUREF/PZ0SEA(:)) )**
 !
 !-------------------------------------------------------------------------------
 ! 
-!       5.     Stability correction for momentum
+!       5.     Neutral transfer coefficients for heat and moisture
+!              ---------------------------------------------------
+!
+ZCHNFI(:) = ZCDNFI(:) / (1 + SQRT(ZCDNFI(:))*LOG(1/PRATIO(:))/XKARMAN) 
+         ! Equations (60) and (61) in Lupkes and Gryanik (2015) for ice
+ZCHNFO(:) = ZCDNFO(:) / (1 + SQRT(ZCDNFO(:))*LOG(1/PRATIO(:))/XKARMAN) 
+         ! Equations (60) and (61) in Lupkes and Gryanik (2015) for ice
+!
+!-------------------------------------------------------------------------------
+! 
+!       6.     Stability correction for momentum
 !              ---------------------------------
 !
-ZPSIUO (:) = PSIFCTU(PUREF(:)/PLMOI(:))
+ZPSIUI (:) = PSIFCTU(PUREF(:)/PLMOI(:))
 !        ! Stability correction above ice
-ZPSIUI (:) = PSIFCTU(PUREF(:)/PLMOO(:))
+ZPSIUO (:) = PSIFCTU(PUREF(:)/PLMOO(:))
          ! Stability correction above ocean
 !
-ZFI (:)   = (1 - ZPSIU(:)/LOG(PUREF(:)/PZ0ICE(:)))**(-2)
+ZFIM (:)   = (1 - ZPSIUI(:)/LOG(PUREF(:)/PZ0ICE(:)))**(-2)
          ! Equation (A1) in Lupkes and Gryanik (2015) for ice
-ZFO (:)   = (1 - ZPSIU(:)/LOG(PUREF(:)/PZ0SEA(:)))**(-2) 
+ZFOM (:)   = (1 - ZPSIUO(:)/LOG(PUREF(:)/PZ0SEA(:)))**(-2) 
          ! Equation (A1) in Lupkes and Gryanik (2015) for ocean
 !
 !-------------------------------------------------------------------------------
 ! 
-!       6.     Stability-dependant form drag
-!              -----------------------------
+!       7.     Stability correction for heat and moisture
+!              ------------------------------------------
 !
-PCDF(:) = ZCDFO(:) * ZFO(:) * (1-ZSIC(:)) + ZCDFI(:) * ZFI(:) * ZSIC(:) 
+ZPSITI (:) = PSIFCTT(PZREF(:)/PLMOI(:))
+!        ! Stability correction above ice
+ZPSITO (:) = PSIFCTT(PZREF(:)/PLMOO(:))
+         ! Stability correction above ocean
+!
+ZFIH(:)    = (1 - ZPSIUI(:)/LOG(PUREF(:)/PZ0ICE(:))) &
+           * (1 - ZPSITI(:)/LOG(PZREF(:)/PZ0ICE(:)))
+         ! Louis stability correction for heat and moisture over ice
+ZFOH (:)   = (1 - ZPSIUO(:)/LOG(PUREF(:)/PZ0SEA(:))) &
+           * (1 - ZPSITO(:)/LOG(PZREF(:)/PZ0SEA(:)))
+         ! Louis stability correction for heat and moisture over ocean
+!
+!-------------------------------------------------------------------------------
+! 
+!       6.     Stability-dependant form drag-related transfer coefficients
+!              -----------------------------------------------------------
+!
+PCDF(:) = ZCDNFO(:) * ZFOM(:) * (1-ZSIC(:)) + ZCDNFI(:) * ZFIM(:) * ZSIC(:) 
          ! Equation (38) in Lupkes and Gryanik (2015)
+PCHF(:) = ZCHNFO(:) * ZFOH(:) * (1-ZSIC(:)) + ZCHNFI(:) * ZFIH(:) * ZSIC(:) 
+         ! Equation (62) in Lupkes and Gryanik (2015)
 !
 END SUBROUTINE FORM_DRAG

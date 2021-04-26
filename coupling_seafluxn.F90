@@ -63,7 +63,8 @@ USE MODD_SLT_n, ONLY : SLT_t
 !
 USE MODD_REPROD_OPER, ONLY : CIMPLICIT_WIND
 !
-USE MODD_CSTS,       ONLY : XRD, XCPD, XP00, XTT, XTTS, XTTSI, XDAY, XMD
+USE MODD_CSTS,       ONLY : XRD, XCPD, XP00, XTT, XTTS, XTTSI, XDAY, XMD, & 
+                            XKARMAN, XG, XRD, XRV
 USE MODD_CO2V_PAR,   ONLY : XMCO2
 USE MODD_SURF_PAR,   ONLY : XUNDEF
 USE MODD_SFX_OASIS,  ONLY : LCPL_SEA, LCPL_SEAICE, LCPL_SEACARB
@@ -207,8 +208,8 @@ REAL, DIMENSION(KI) :: ZRESA_SEA  ! aerodynamical resistance on open sea
 REAL, DIMENSION(KI) :: ZRESA_SEA_ICE  ! "     "          on seaice
 REAL, DIMENSION(KI) :: ZUSTAR     ! friction velocity (m/s) on open sea
 REAL, DIMENSION(KI) :: ZUSTAR_ICE ! "     "          on seaice
-REAL, DIMENSION(KI) :: ZZ0        ! roughness length over open sea
-REAL, DIMENSION(KI) :: ZZ0_ICE    ! roughness length over seaice
+REAL, DIMENSION(KI) :: ZZ0        ! aerodynamic roughness length over open sea
+REAL, DIMENSION(KI) :: ZZ0_ICE    ! aerodynamic roughness length over seaice
 REAL, DIMENSION(KI) :: ZZ0H       ! heat roughness length over open sea
 REAL, DIMENSION(KI) :: ZZ0H_ICE   ! heat roughness length over seaice
 REAL, DIMENSION(KI) :: ZZ0W       ! Work array for Z0 and Z0H computation
@@ -224,13 +225,20 @@ REAL, DIMENSION(KI) :: ZSFTH_ICE  ! Heat flux on sea ice
 REAL, DIMENSION(KI) :: ZSFTQ_ICE  ! Sea-ice sublimation flux
 REAL, DIMENSION(KI) :: ZSFU_ICE   ! zonal      momentum flux on seaice (Pa)
 REAL, DIMENSION(KI) :: ZSFV_ICE   ! meridional momentum flux on seaice (Pa)
-REAL, DIMENSION(KI) :: ZSFU_FORM  ! zonal momentum flux due to drag form over a mixture of ice and ocean(Pa)
+REAL, DIMENSION(KI) :: ZSFU_FORM  ! zonal momentum flux due to drag form over 
+                                  ! a mixture of ice and ocean(Pa)
 REAL, DIMENSION(KI) :: ZSFV_FORM  ! meridional momentum flux due to drag form (Pa)
 REAL, DIMENSION(KI) :: ZSFTH_FORM ! Sensible heat flux due to drag form (W/m2) 
 REAL, DIMENSION(KI) :: ZSFTQ_FORM ! Upward water flux due to drag form (kg/m2/s)
-
+REAL, DIMENSION(KI) :: ZLMOO      ! Monin-Obukhov length above ocean
+REAL, DIMENSION(KI) :: ZLMOI      ! Monin-Obukhov length above sea ice 
+REAL, DIMENSION(KI) :: ZRATIOO    ! Ratio between aerodynamical and scalar lengths 
+                                  ! above ocean
+REAL, DIMENSION(KI) :: ZRATIOI    ! Ratio between aerodynamical and scalar lengths 
+                                  ! above ice
 REAL, DIMENSION(KI) :: ZHU        ! Near surface relative humidity
 REAL, DIMENSION(KI) :: ZQA        ! specific humidity (kg/kg)
+REAL, DIMENSION(KI) :: ZPOTVA     ! Virtual potential temperature at PZREF (Kelvin) 
 REAL, DIMENSION(KI) :: ZEMIS      ! Emissivity at time t
 REAL, DIMENSION(KI) :: ZTRAD      ! Radiative temperature at time t
 !
@@ -242,6 +250,7 @@ REAL, DIMENSION(KI) :: ZCO2     ! CO2 concentration (ppmm)
 REAL                             :: ZCONVERTFACM0_SLT, ZCONVERTFACM0_DST
 REAL                             :: ZCONVERTFACM3_SLT, ZCONVERTFACM3_DST
 REAL                             :: ZCONVERTFACM6_SLT, ZCONVERTFACM6_DST
+REAL                             :: ZRVSRDM1
 !
 INTEGER                          :: ISIZE_WATER  ! number of points with some sea water 
 INTEGER                          :: ISIZE_ICE    ! number of points with some sea ice
@@ -323,6 +332,9 @@ PSFTS(:,:) = 0.
 ZHU = 1.
 !
 ZQA(:) = PQA(:) / PRHOA(:)
+!
+ZRVSRDM1  = XRV/XRD-1. ! 0.607766
+ZPOTVA (:) = PTA(:) / ZEXNA(:) * (1 + ZRVSRDM1 * PQA(:)) 
 !
 ZSST(:)=SM%S%XSST(:)
 !
@@ -460,13 +472,22 @@ IF(SM%S%LHANDLE_SIC)THEN
 !
   IF (SM%S%LFORMDRAG) THEN
 
-    ! ZZ0SEA to be recovered from coare_fluxes
-    ! ZZ0ICE from ice_flux or coupling_ice_fluxes
-    ! LMO I/O from turbulent fluxes over I/O 
-    ! ZRATIO from andreas model
+    ZLMOI = - ZUSTAR_ICE(:)**3 * ZPOTVA(:) / (XKARMAN * XG *&
+            (ZSFTH_ICE(:) / (PRHOA(:)*XCPD) * (1 + ZRVSRDM1*PQA(:)) +&
+            ZRVSRDM1 * PTA(:)/ZEXNA(:) * ZSFTQ_ICE(:) / PRHOA(:) )) 
+    ! ZLMOI and ZLMOO use the momentum and heat fluxes corrected
+    ! from precipitation effects. Should we rather use those without
+    ! the precipitation corrections ? 
+    ZLMOO = - ZUSTAR(:)**3 * ZPOTVA(:) / (XKARMAN * XG * &
+            (ZSFTH(:) / (PRHOA(:)*XCPD) * (1 + ZRVSRDM1*PQA(:)) +&  
+            ZRVSRDM1 * PTA(:)/ZEXNA(:) * ZSFTQ(:) / PRHOA(:) )) 
 
-    CALL FORM_DRAG(SM, ZZ0SEA, ZZ0ICE, PUREF, PZREF, ZLMOI, ZLMOO, &
-           ZRATIO, ZCDF, ZCHF) 
+    ZRATIOO = SM%S%XZ0 / ZZ0H
+    
+    ZRATIOI = ZZ0_ICE / ZZ0H_ICE
+
+    CALL FORM_DRAG(SM%S%XSIC, SM%S%XZ0, ZZ0_ICE, PUREF, PZREF, ZLMOI,&
+           ZLMOO, ZRATIOI, ZRATIOO, ZCDF, ZCHF) 
 
     CALL SEA_MOMENTUM_FLUXES(ZCDF, ZSFU_FORM, ZSFV_FORM)
 
@@ -867,7 +888,7 @@ REAL, DIMENSION(KI), INTENT(IN)  :: PCH       ! Heat transfer coefficient
 REAL, DIMENSION(KI), INTENT(OUT) :: PSHF      ! Upward sensible heat fluxes (W/m2)
 REAL, DIMENSION(KI), INTENT(OUT) :: PWF       ! Upward water fluxes (kg/m2/s)
 
-PSFH (:) = XCPD * PRHOA(:) * PCH(:) * ZWIND(:) * ( SM%S%XTICE(:) -PTA(:) * ZEXNS(:) / ZEXNA(:) ) / ZEXNS(:)
+PSHF (:) = XCPD * PRHOA(:) * PCH(:) * ZWIND(:) * ( SM%S%XTICE(:) -PTA(:) * ZEXNS(:) / ZEXNA(:) ) / ZEXNS(:)
 PWF  (:) = PRHOA(:) * PCH(:) * ZWIND(:) * ( ZQSAT_ICE(:)-ZQA(:) )
 ! No Lv because this is the moisture flux and not the latent heat flux
 

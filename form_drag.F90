@@ -3,8 +3,8 @@
 !SFX_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !SFX_LIC for details. version 1.
 !     #########
-     SUBROUTINE FORM_DRAG (SM, PZ0SEA, PZ0ICE, PUREF, PZREF, PLMOI, PLMOO, &
-                           PRATIO, PCDF, PCHF)
+     SUBROUTINE FORM_DRAG (PSIC, PZ0SEA, PZ0ICE, PUREF, PZREF, PLMOI, PLMOO, &
+                           PRATIOI, PRATIOO, PCDF, PCHF)
 !     #######################################################################
 !
 !
@@ -13,7 +13,7 @@
 !!    PURPOSE
 !!    -------
 !      The momentum transfer coefficient over a mixture of ice and sea can be 
-!      decomposed into : CD = XSIC * CDICE + (1-XSIC) * CDOCEAN + CDFORMDRAG
+!      decomposed into : CD = PSIC * CDICE + (1-PSIC) * CDOCEAN + CDFORMDRAG
 !      where CDICE and CDOCEAN are the skin drag coefficients, for ice
 !      and ocean respectively, related to the surface characteristics
 !      and CDFORMDRAG is the form drag induced by the ice topography or
@@ -61,7 +61,6 @@
 !*       0.     DECLARATIONS
 !               ------------
 !
-USE MODD_SURFEX_n,  ONLY : SEAFLUX_MODEL_t
 USE MODN_SEAFLUX_n, ONLY : XCE, XBETAFORM  
                          ! XCE = Effective coefficient of resistance of an 
                          ! individual floe or pond edge
@@ -73,22 +72,25 @@ IMPLICIT NONE
 !
 !*      0.1    declarations of arguments
 !
-TYPE(SEAFLUX_MODEL_t), INTENT(IN) :: SM    ! contains sea ice concentration
-!
-REAL, DIMENSION(:), INTENT(IN)   :: PZ0SEA ! skin drag coefficient over water
-REAL, DIMENSION(:), INTENT(IN)   :: PZ0ICE ! skin drag coefficient over ice
-REAL, DIMENSION(:), INTENT(IN)   :: PUREF  ! atmospheric height for wind speed
-REAL, DIMENSION(:), INTENT(IN)   :: PZREF  ! atmospheric height for temperature and moisture
-REAL, DIMENSION(:), INTENT(IN)   :: PLMOI  ! Monin-Obukhov length above ice
-REAL, DIMENSION(:), INTENT(IN)   :: PLMOO  ! Monin-Obukhov length above ocean
-REAL, DIMENSION(:), INTENT(IN)   :: PRATIO ! ratio between aerodynamic and scalar
-                                           ! and aerodynamic roughness lengths
-REAL, DIMENSION(:), INTENT(OUT)  :: PCDF   ! output form drag coefficient 
-REAL, DIMENSION(:), INTENT(OUT)  :: PCHF   ! Equivalent form drag coefficient for heat
+REAL, DIMENSION(:), INTENT(IN)   :: PSIC    ! sea ice concentration
+                  ! Warning : This sea ice concentration currently do not account
+                  ! for the melt pond coverage (in future, we should change for
+                  ! ZSIC = PSIC - melt pond coverage
+REAL, DIMENSION(:), INTENT(IN)   :: PZ0SEA  ! skin drag coefficient over water
+REAL, DIMENSION(:), INTENT(IN)   :: PZ0ICE  ! skin drag coefficient over ice
+REAL, DIMENSION(:), INTENT(IN)   :: PUREF   ! atmospheric height for wind speed
+REAL, DIMENSION(:), INTENT(IN)   :: PZREF   ! atmospheric height for temperature and moisture
+REAL, DIMENSION(:), INTENT(IN)   :: PLMOI   ! Monin-Obukhov length above ice
+REAL, DIMENSION(:), INTENT(IN)   :: PLMOO   ! Monin-Obukhov length above ocean
+REAL, DIMENSION(:), INTENT(IN)   :: PRATIOI ! ratio between scalar and aerodynamic roughness 
+                                            ! lengths above ice
+REAL, DIMENSION(:), INTENT(IN)   :: PRATIOO ! ratio between scalar and aerodynamic roughness 
+                                            ! lengths above ocean
+REAL, DIMENSION(:), INTENT(OUT)  :: PCDF    ! output form drag coefficient 
+REAL, DIMENSION(:), INTENT(OUT)  :: PCHF    ! Equivalent form drag coefficient for heat
 !
 !*      0.2    declarations of local variables
 !
-REAL, DIMENSION(SIZE(PZ0SEA))    :: ZSIC                 ! sea ice concentration
 REAL, DIMENSION(SIZE(PZ0SEA))    :: ZSC                  ! sheltering of atmospheric flow
                                  ! between obstacles
 REAL, DIMENSION(SIZE(PZ0SEA))    :: ZDF                  ! characteristic length of floes
@@ -118,9 +120,6 @@ REAL :: ZE        !
 !       1.     Initialization
 !              --------------
 !
-ZSIC = SM%S%XSIC  ! Warning : This sea ice concentration currently do not account
-                  ! for the melt pond coverage (in future, we should change for
-                  ! ZSIC = SM%S%SIC - melt pond coverage
 ZHFC      = 0.41  ! Mean value of REFLEX Fram strait data (Lupkes et al, 2012)
 ZDMIN     = 8
 ZE        = EXP(1.0)
@@ -136,7 +135,7 @@ ZHF (:) = ZHFC ! A constant value allows to recover Andreas et al (2010) unified
              ! is not a model parameter. See their equation (40).
              ! When GELATO is activated, we can replace by GELATO value.
 
-ZDF (:) = ZDMIN/(1-ZSIC(:))**XBETAFORM ! This simplified form for floe lengths
+ZDF (:) = ZDMIN/(1-PSIC(:))**XBETAFORM ! This simplified form for floe lengths
              ! would compensate for a sheltering function set to 1 that we need
              ! to recover Andreas et al (2010) unified quadratic form for CDF 
              ! valid both in the inner Arctic and in the marginal ice zone.
@@ -155,12 +154,12 @@ ZSC(:)  = 1  ! Lupkes et al (2012) advises to use the same sheltering function
 !       4.     Neutral form drag
 !              -----------------
 !
-ZCDFK(:) = XCE/2 * ZSC(:)**2 * ZHF(:)/ZDF(:) * ZSIC(:)   
+ZCDFK(:) = XCE/2 * ZSC(:)**2 * ZHF(:)/ZDF(:) * PSIC(:)   
          ! Part of equation (21) in Lupkes and Gryanik (2015)
          ! This equation is the marginal ice zone one.
          ! The inner Arctic one should use the melt pond depth and melt pond
-         ! diameters instead of floe freeboard and diameters as well as (1-ZSIC)
-         ! instead of ZSIC. But the chosen parameters above for ZHF and ZDF
+         ! diameters instead of floe freeboard and diameters as well as (1-PSIC)
+         ! instead of PSIC. But the chosen parameters above for ZHF and ZDF
          ! allow to recover a unified form for inner Arctic and MIZ.
 ZCDNFI(:) = ZCDFK(:) * ( LOG(ZHF(:) / (ZE*PZ0ICE(:))) / LOG(PUREF/PZ0ICE(:)) )**2
          ! Equation (21) in Lupkes and Gryanik (2015) for ice
@@ -172,9 +171,9 @@ ZCDNFO(:) = ZCDFK(:) * ( LOG(ZHF(:) / (ZE*PZ0SEA(:))) / LOG(PUREF/PZ0SEA(:)) )**
 !       5.     Neutral transfer coefficients for heat and moisture
 !              ---------------------------------------------------
 !
-ZCHNFI(:) = ZCDNFI(:) / (1 + SQRT(ZCDNFI(:))*LOG(1/PRATIO(:))/XKARMAN) 
+ZCHNFI(:) = ZCDNFI(:) / (1 + SQRT(ZCDNFI(:))*LOG(1/PRATIOI(:))/XKARMAN) 
          ! Equations (60) and (61) in Lupkes and Gryanik (2015) for ice
-ZCHNFO(:) = ZCDNFO(:) / (1 + SQRT(ZCDNFO(:))*LOG(1/PRATIO(:))/XKARMAN) 
+ZCHNFO(:) = ZCDNFO(:) / (1 + SQRT(ZCDNFO(:))*LOG(1/PRATIOO(:))/XKARMAN) 
          ! Equations (60) and (61) in Lupkes and Gryanik (2015) for ice
 !
 !-------------------------------------------------------------------------------
@@ -214,9 +213,9 @@ ZFOH (:)   = (1 - ZPSIUO(:)/LOG(PUREF(:)/PZ0SEA(:))) &
 !       6.     Stability-dependant form drag-related transfer coefficients
 !              -----------------------------------------------------------
 !
-PCDF(:) = ZCDNFO(:) * ZFOM(:) * (1-ZSIC(:)) + ZCDNFI(:) * ZFIM(:) * ZSIC(:) 
+PCDF(:) = ZCDNFO(:) * ZFOM(:) * (1-PSIC(:)) + ZCDNFI(:) * ZFIM(:) * PSIC(:) 
          ! Equation (38) in Lupkes and Gryanik (2015)
-PCHF(:) = ZCHNFO(:) * ZFOH(:) * (1-ZSIC(:)) + ZCHNFI(:) * ZFIH(:) * ZSIC(:) 
+PCHF(:) = ZCHNFO(:) * ZFOH(:) * (1-PSIC(:)) + ZCHNFI(:) * ZFIH(:) * PSIC(:) 
          ! Equation (62) in Lupkes and Gryanik (2015)
 !
 END SUBROUTINE FORM_DRAG

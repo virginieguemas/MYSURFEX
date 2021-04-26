@@ -469,6 +469,7 @@ DO J=1,SIZE(PTA)
   PCE(J) = ZUSR(J)*ZQSR(J)/(ZDUWG(J)*(PQA(J)-PQSAT(J)))
   !
   !      4.2 Neutral transfer coefficients at 10m
+  !          (10m is set in section 1.1, l. 220)
   !
   PCDN(J) = (XKARMAN/LOG(ZS/ZO(J)))**2.
   ZCHN(J) = (XKARMAN/LOG(ZS/ZO(J)))*(XKARMAN/LOG(ZS/ZOT(J)))

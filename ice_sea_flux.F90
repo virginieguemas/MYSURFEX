@@ -233,7 +233,7 @@ ENDIF
 PSFTH (:) =  XCPD * PRHOA(:) * PCH(:) * ZVMOD(:) * ( PTICE(:) -PTA(:) * PEXNS(:) / PEXNA(:) ) / PEXNS(:)
 ! Using Heat transfer coefficient CH for vapor transfer coefficient CE !
 PSFTQ (:) =  PRHOA(:) * PCH(:) * ZVMOD(:) * ( PQSAT(:)-PQA(:) )
-! Missing Lv - latent heat of vaporization / sublimation
+! No Lv because this is the moisture flux and not the latent heat flux
 PUSTAR(:) = SQRT(ZUSTAR2(:))
 !
 IF (LHOOK) CALL DR_HOOK('ICE_SEA_FLUX',1,ZHOOK_HANDLE)

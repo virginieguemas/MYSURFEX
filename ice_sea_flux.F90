@@ -219,15 +219,7 @@ ENDIF
 !
 !-------------------------------------------------------------------------------
 !
-!       3.     Accounting for form drag following Lupkes and Gryanik (2015)
-!              ------------------------------------------------------------
-
-
-
-!
-!-------------------------------------------------------------------------------
-!
-!       4.     Upward fluxes of heat and moisture, downward momentum flux
+!       3.     Upward fluxes of heat and moisture, downward momentum flux
 !              -----------------------------------------------------------
 !
 PSFTH (:) =  XCPD * PRHOA(:) * PCH(:) * ZVMOD(:) * ( PTICE(:) -PTA(:) * PEXNS(:) / PEXNA(:) ) / PEXNS(:)

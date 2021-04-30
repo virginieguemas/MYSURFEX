@@ -153,6 +153,11 @@ PQSAT(:) = QSAT(PTICE(:),PPS(:))
 !              ---------------------------------------
 ZVMOD(:)=WIND_THRESHOLD(PVMOD(:),PUREF(:))
 !
+!       1.3    Calculate the bulk Richardson number
+!              -------------------------------------
+CALL SURFACE_RI(PTICE,PQSAT,PEXNS,PEXNA,PTA,PQA, &
+                     PZREF, PUREF, ZDIRCOSZW,PVMOD,PRI)
+!
 !-------------------------------------------------------------------------------
 !
 !       2.     Transfer coefficients for momentum, heat and moisture
@@ -175,9 +180,6 @@ IF ( XCD_ICE_CST == 0.0 ) THEN ! Namelist parameter to allow backward compatibil
      ZRA(:) = 1. / ( PCH(:) * ZVMOD(:) )
 !
   ELSE
-     ! Calculate the bulk Richardson number
-     CALL SURFACE_RI(PTICE,PQSAT,PEXNS,PEXNA,PTA,PQA, &
-                     PZREF, PUREF, ZDIRCOSZW,PVMOD,PRI)
 
      ! Computation of transfer coefficient for momentum following formulations
      ! for land surfaces

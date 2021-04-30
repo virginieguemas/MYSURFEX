@@ -472,19 +472,19 @@ IF(SM%S%LHANDLE_SIC)THEN
 !
   IF (SM%S%LFORMDRAG) THEN
 
-    ZLMOI = - ZUSTAR_ICE(:)**3 * ZPOTVA(:) / (XKARMAN * XG *&
+    ZLMOI(:) = - ZUSTAR_ICE(:)**3 * ZPOTVA(:) / (XKARMAN * XG *&
             (ZSFTH_ICE(:) / (PRHOA(:)*XCPD) * (1 + ZRVSRDM1*PQA(:)) +&
             ZRVSRDM1 * PTA(:)/ZEXNA(:) * ZSFTQ_ICE(:) / PRHOA(:) )) 
     ! ZLMOI and ZLMOO use the momentum and heat fluxes corrected
     ! from precipitation effects. Should we rather use those without
     ! the precipitation corrections ? 
-    ZLMOO = - ZUSTAR(:)**3 * ZPOTVA(:) / (XKARMAN * XG * &
+    ZLMOO(:) = - ZUSTAR(:)**3 * ZPOTVA(:) / (XKARMAN * XG * &
             (ZSFTH(:) / (PRHOA(:)*XCPD) * (1 + ZRVSRDM1*PQA(:)) +&  
             ZRVSRDM1 * PTA(:)/ZEXNA(:) * ZSFTQ(:) / PRHOA(:) )) 
 
-    ZRATIOO = SM%S%XZ0 / ZZ0H
+    ZRATIOO(:) = SM%S%XZ0(:) / ZZ0H(:)
     
-    ZRATIOI = ZZ0_ICE / ZZ0H_ICE
+    ZRATIOI(:) = ZZ0_ICE(:) / ZZ0H_ICE(:)
 
     CALL FORM_DRAG(SM%S%XSIC, SM%S%XZ0, ZZ0_ICE, PUREF, PZREF, ZLMOI,&
            ZLMOO, ZRATIOI, ZRATIOO, ZCDF, ZCHF) 

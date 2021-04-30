@@ -56,7 +56,7 @@
 !*       0.     DECLARATIONS
 !               ------------
 !
-USE MODD_CSTS,       ONLY : XG, XCPD
+USE MODD_CSTS,       ONLY : XG, XCPD, XKARMAN
 USE MODD_SURF_PAR,   ONLY : XUNDEF
 USE MODD_SURF_ATM,   ONLY : LDRAG_COEF_ARP, LRRGUST_ARP, XRRSCALE, &
                             XRRGAMMA, XUTILGUST     
@@ -199,6 +199,15 @@ ELSE
    PCDN(:)=XCD_ICE_CST
    PCH (:)=XCD_ICE_CST
    ZRA (:)=1./(PCH(:)*ZVMOD(:))
+
+   PZ0ICE (:) = PUREF(:)/ EXP( SQRT( XKARMAN**2/XCD_ICE_CST ))
+   ! Simplified version of 
+   !PZ0ICE (:) = PUREF(:)/ EXP( SQRT( XKARMAN**2/PCDN(:) ))
+   !
+   PZ0HICE (:) = PZREF(:) / EXP(XKARMAN/SQRT(XCD_ICE_CST)) 
+   ! Simplified version of :
+   !PZ0HICE (:) = PZREF(:) / EXP( XKARMAN*SQRT(PCDN(:))/PCH(:)) 
+              ! In the same way as CDN is assimilated to CD, CHN is assilated to CH
 !
 ENDIF
 !

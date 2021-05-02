@@ -306,6 +306,10 @@ ZZ0_ICE  (:) = XUNDEF
 ZZ0H_ICE (:) = XUNDEF
 ZQSAT_ICE(:) = XUNDEF
 !
+ZSFTQ_FORM(:) = 0.
+ZSFTH_FORM(:) = 0.
+ZSFU_FORM(:)  = 0.
+ZSFV_FORM(:)  = 0.
 !
 ZEMIS    (:) = XUNDEF
 ZTRAD    (:) = XUNDEF
@@ -487,12 +491,17 @@ IF(SM%S%LHANDLE_SIC)THEN
     
     ZRATIOI(:) = ZZ0_ICE(:) / ZZ0H_ICE(:)
 
+    PRINT*,'SIC',SM%S%XSIC
     CALL FORM_DRAG(SM%S%XSIC, SM%S%XZ0, ZZ0_ICE, PUREF, PZREF, ZLMOI,&
            ZLMOO, ZRATIOI, ZRATIOO, ZCDF, ZCHF) 
 
     CALL SEA_MOMENTUM_FLUXES(ZCDF, ZSFU_FORM, ZSFV_FORM)
+    PRINT*, 'ZSFU_FORM',ZSFU_FORM
+    PRINT*, 'ZSFV_FORM',ZSFV_FORM
 
     CALL LATENT_SENSIBLE_HEAT_FLUXES(ZCHF, ZSFTH_FORM, ZSFTQ_FORM)
+    PRINT*,'ZSFTH_FORM', ZSFTH_FORM
+    PRINT*,'ZSFTQ_FORM', ZSFTQ_FORM
 
   ENDIF
 ENDIF
@@ -607,7 +616,8 @@ ENDIF
      ZEMIS, ZTRAD, PRAIN, PSNOW, ZCO2,                      &
      ZCD_ICE, ZCDN_ICE, ZCH_ICE, ZCE_ICE, ZRI_ICE,          &
      ZZ0_ICE, ZZ0H_ICE, ZQSAT_ICE, ZSFTH_ICE, ZSFTQ_ICE,    &
-     ZSFU_ICE, ZSFV_ICE)
+     ZSFU_ICE, ZSFV_ICE, ZSFTH_FORM, ZSFTQ_FORM, ZSFU_FORM  &
+     ZSFV_FORM)
 !
 !-------------------------------------------------------------------------------
 ! A kind of "average_flux"
@@ -618,7 +628,11 @@ IF (SM%S%LHANDLE_SIC) THEN
    PSFTQ  (:) = ZSFTQ (:) * ( 1.0 - SM%S%XSIC (:)) + ZSFTQ_ICE(:) * SM%S%XSIC(:)
    PSFU   (:) = ZSFU  (:) * ( 1.0 - SM%S%XSIC (:)) +  ZSFU_ICE(:) * SM%S%XSIC(:)
    PSFV   (:) = ZSFV  (:) * ( 1.0 - SM%S%XSIC (:)) +  ZSFV_ICE(:) * SM%S%XSIC(:)
-
+   
+   PRINT*,'PSFU',PSFU
+   PRINT*, 'PSFV',PSFV
+   PRINT*, 'PSFTH',PSFTH
+   PRINT*, 'PSFTQ',PSFTQ
    IF (SM%S%LFORMDRAG) THEN
 
      PSFTH (:) = PSFTH (:) + ZSFTH_FORM (:)
@@ -627,6 +641,10 @@ IF (SM%S%LHANDLE_SIC) THEN
      PSFV  (:) = PSFV  (:) + ZSFV_FORM  (:)
 
    ENDIF
+   PRINT*, 'PSFU', PSFU
+   PRINT*, 'PSFV', PSFV
+   PRINT*, 'PSFTH',PSFTH
+   PRINT*, 'PSFTQ',PSFTQ
 ELSE
    PSFTH  (:) = ZSFTH (:) 
    PSFTQ  (:) = ZSFTQ (:) 

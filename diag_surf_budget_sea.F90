@@ -4,12 +4,12 @@
 !SFX_LIC for details. version 1.
 !     #########
 SUBROUTINE  DIAG_SURF_BUDGET_SEA(PTT , PSST, PRHOA, PSFTH, PSFTH_ICE,    &
-                                 PSFTQ, PSFTQ_ICE,                       &
-                                 PDIR_SW, PSCA_SW, PLW,                  &
+                                 PSFTH_FORM, PSFTQ, PSFTQ_ICE,           &
+                                 PSFTQ_FORM, PDIR_SW, PSCA_SW, PLW,      &
                                  PDIR_ALB,PSCA_ALB,PALB_ICE,PEMIS, PTRAD,&
-                                 PSFZON, PSFZON_ICE, PSFMER, PSFMER_ICE, &
-                                 OHANDLE_SIC, PSIC, PTICE,               &
-                                 PRN, PH, PLE, PLEI, PGFLUX,             &
+                                 PSFZON, PSFZON_ICE, PSFZON_FORM, PSFMER,&
+                                 PSFMER_ICE, PSFMER_FORM, OHANDLE_SIC, 
+                                 PSIC, PTICE, PRN, PH, PLE, PLEI, PGFLUX,&
                                  PSWD, PSWU, PSWBD, PSWBU, PLWD, PLWU,   &
                                  PFMU, PFMV, PEVAP, PEVAP_ICE, PSUBL,    &
                                  PRN_ICE, PH_ICE, PLE_ICE, PGFLUX_ICE,   &
@@ -40,6 +40,8 @@ SUBROUTINE  DIAG_SURF_BUDGET_SEA(PTT , PSST, PRHOA, PSFTH, PSFTH_ICE,    &
 !!      Original    01/2004
 !       B. decharme 04/2013 : Add EVAP and SUBL diag
 !       S.Senesi    01/2014 : Handle fluxes on seaice
+!       V.Guemas    05/2021 : Include form drag momentum and heat fluxes
+!                             over a mixture of ice and seawater
 !!------------------------------------------------------------------
 !
 
@@ -62,9 +64,11 @@ REAL, DIMENSION(:), INTENT(IN) :: PSST      ! sea surface temperature (K)
 REAL, DIMENSION(:), INTENT(IN) :: PRHOA     ! air density
 REAL, DIMENSION(:), INTENT(IN) :: PSFTH     ! heat flux
 REAL, DIMENSION(:), INTENT(IN) :: PSFTH_ICE ! heat flux on seaice
+REAL, DIMENSION(:), INTENT(IN) :: PSFTH_FORM! heat flux related to form drag
 !
 REAL, DIMENSION(:), INTENT(IN) :: PSFTQ     ! water flux
 REAL, DIMENSION(:), INTENT(IN) :: PSFTQ_ICE ! water flux on seaice
+REAL, DIMENSION(:), INTENT(IN) :: PSFTQ_FORM! water flux related to form drag
 !
 REAL, DIMENSION(:,:),INTENT(IN):: PDIR_SW   ! direct  solar radiation (on horizontal surf.)
 !                                           !                                       (W/m2)
@@ -80,8 +84,10 @@ REAL, DIMENSION(:), INTENT(IN) :: PTRAD     ! radiative temperature             
 !
 REAL, DIMENSION(:), INTENT(IN) :: PSFZON    ! zonal friction
 REAL, DIMENSION(:), INTENT(IN) :: PSFZON_ICE! zonal friction
+REAL, DIMENSION(:), INTENT(IN) :: PSFZON_FORM! zonal friction related to form drag
 REAL, DIMENSION(:), INTENT(IN) :: PSFMER    ! meridional friction
 REAL, DIMENSION(:), INTENT(IN) :: PSFMER_ICE! meridional friction
+REAL, DIMENSION(:), INTENT(IN) :: PSFMER_FORM! meridional friction related to form drag
 !
 LOGICAL, INTENT(IN)         :: OHANDLE_SIC  ! Do we weight seaice and open sea fluxes
 REAL, DIMENSION(:), INTENT(IN) :: PSIC      ! Sea ice cover                         (-)
@@ -189,22 +195,24 @@ ELSE
   !
   !* sensible heat flux
   !
-  PH = (1 - PSIC) * PSFTH + PSIC * PSFTH_ICE 
+  PH = (1 - PSIC) * PSFTH + PSIC * PSFTH_ICE + PSFTH_FORM 
   !
   !* latent and sublimation heat fluxes
   !
-  PLE  = (1 - PSIC) * PSFTQ * XLVTT + PSIC * PSFTQ_ICE * XLSTT
-  PLEI =                              PSIC * PSFTQ_ICE * XLSTT
+  PLE  = (1 - PSIC) * PSFTQ * XLVTT + PSIC * PSFTQ_ICE * XLSTT  + &
+         PSFTQ_FORM * XLSTT
+  PLEI =                              PSIC * PSFTQ_ICE * XLSTT  + &
+         PSFTQ_FORM * XLSTT 
   !
   !* evaporation and sublimation flux
   !
-  PEVAP = (1 - PSIC) * PSFTQ + PSIC * PSFTQ_ICE 
-  PSUBL =                      PSIC * PSFTQ_ICE 
+  PEVAP = (1 - PSIC) * PSFTQ + PSIC * PSFTQ_ICE + PSFTQ_FORM
+  PSUBL =                      PSIC * PSFTQ_ICE + PSFTQ_FORM
   !
   !* wind stress
   !
-  PFMU = (1 - PSIC) * PSFZON + PSIC * PSFZON_ICE
-  PFMV = (1 - PSIC) * PSFMER + PSIC * PSFMER_ICE
+  PFMU = (1 - PSIC) * PSFZON + PSIC * PSFZON_ICE + PSFZON_FORM
+  PFMV = (1 - PSIC) * PSFMER + PSIC * PSFMER_ICE + PSFMER_FORM
   !
   !---------------------------------------------------------------------------- 
   ! Sea ice diag (only)
@@ -229,26 +237,49 @@ ELSE
   !
   PRN_ICE(:) = PSWD(:) - PSWU_ICE(:) + PLWD(:) - PLWU_ICE(:)
   !
+  WHERE (PSIC > 0.01) ! form drag fluxes tend to 0 when PSIC tends to 0 or 1
+                      ! but we need this check to avoid numerical errors
   !* sensible heat flux
   !
-  PH_ICE   (:)= PSFTH_ICE(:)
+    PH_ICE   (:)= PSFTH_ICE(:) + PSFTH_FORM(:)/PSIC(:)
   !
   !* latent heat flux
   !  
-  PLE_ICE  (:)= PSFTQ_ICE(:) * XLSTT
+    PLE_ICE  (:)= (PSFTQ_ICE(:) + PSFTQ_FORM(:)/PSIC(:)) * XLSTT
   !
   !* evaporation (sublimation) flux
   !  
-  PEVAP_ICE(:)= PSFTQ_ICE(:) 
+    PEVAP_ICE(:)= PSFTQ_ICE(:) + PSFTQ_FORM(:)/PSIC(:)
   !
-  !* ice storage flux
-  !
-  PGFLUX_ICE(:) = PRN_ICE(:) - PH_ICE(:) - PLE_ICE(:)
   !
   !* wind stress
   !
-  PFMU_ICE(:) = PSFZON_ICE(:)
-  PFMV_ICE(:) = PSFMER_ICE(:)
+    PFMU_ICE(:) = PSFZON_ICE(:) + PSFZON_FORM(:)/PSIC(:)
+    PFMV_ICE(:) = PSFMER_ICE(:) + PSFMER_FORM(:)/PSIC(:)
+
+  ELSEWHERE
+  !* sensible heat flux
+  !
+    PH_ICE   (:)= PSFTH_ICE(:)
+  !
+  !* latent heat flux
+  !  
+    PLE_ICE  (:)= PSFTQ_ICE(:) * XLSTT
+  !
+  !* evaporation (sublimation) flux
+  !  
+    PEVAP_ICE(:)= PSFTQ_ICE(:)
+  !
+  !* wind stress
+  !
+    PFMU_ICE(:) = PSFZON_ICE(:) 
+    PFMV_ICE(:) = PSFMER_ICE(:) 
+  
+  END WHERE
+  !
+  !* ice storage flux
+  !
+    PGFLUX_ICE(:) = PRN_ICE(:) - PH_ICE(:) - PLE_ICE(:)
   !  
 ENDIF
 !

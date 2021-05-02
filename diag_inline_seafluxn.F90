@@ -12,7 +12,8 @@ SUBROUTINE DIAG_INLINE_SEAFLUX_n (DGS, DGSI, S, &
      PEMIS, PTRAD, PRAIN, PSNOW, PCO2,                   & 
      PCD_ICE, PCDN_ICE, PCH_ICE, PCE_ICE, PRI_ICE,       &
      PZ0_ICE, PZ0H_ICE, PQSAT_ICE, PSFTH_ICE, PSFTQ_ICE, &
-     PSFZON_ICE, PSFMER_ICE )
+     PSFZON_ICE, PSFMER_ICE, PSFTH_FORM, PSFTQ_FORM,     &
+     PSFZON_FORM, PSFMER_FORM )
                                           
 !     #####################################################################################
 !
@@ -131,6 +132,10 @@ REAL, DIMENSION(:), INTENT(IN)    :: PSFTH_ICE  ! heat flux  (W/m2)
 REAL, DIMENSION(:), INTENT(IN)    :: PSFTQ_ICE  ! water flux (kg/m2/s)
 REAL, DIMENSION(:), INTENT(IN)    :: PSFZON_ICE ! zonal friction
 REAL, DIMENSION(:), INTENT(IN)    :: PSFMER_ICE ! meridian friction
+REAL, DIMENSION(:), INTENT(IN)    :: PSFTH_FORM ! heat flux  (W/m2) linked to form drag
+REAL, DIMENSION(:), INTENT(IN)    :: PSFTQ_FORM ! water flux (kg/m2/s) linked to form drag
+REAL, DIMENSION(:), INTENT(IN)    :: PSFZON_FORM! zonal friction linked to form drag
+REAL, DIMENSION(:), INTENT(IN)    :: PSFMER_FORM! meridian friction linked to form drag
 !
 !*      0.2    declarations of local variables
 !
@@ -237,11 +242,11 @@ IF (DGS%LSURF_BUDGET.OR.DGS%LSURF_BUDGETC) THEN
   CALL SEAFLUX_ALBEDO(PDIR_SW,PSCA_SW,PDIR_ALB,PSCA_ALB,DGS%XALBT)
 !
   CALL DIAG_SURF_BUDGET_SEA   (XTTS, S%XSST, PRHOA, PSFTH, PSFTH_ICE,    &
-                                 PSFTQ, PSFTQ_ICE,                     &
+                                 PSFTH_FORM, PSFTQ, PSFTQ_ICE, PSFTQ_FORM, &
                                  PDIR_SW, PSCA_SW, PLW, PDIR_ALB,      &
                                  PSCA_ALB,S%XICE_ALB, PEMIS, PTRAD,      &
-                                 PSFZON, PSFZON_ICE, PSFMER,           &
-                                 PSFMER_ICE, S%LHANDLE_SIC, S%XSIC, S%XTICE, &
+                                 PSFZON, PSFZON_ICE, PSFZON_FORM, PSFMER,    &
+                                 PSFMER_ICE, PSFMER_FORM, S%LHANDLE_SIC, S%XSIC, S%XTICE, &
                                  DGS%XRN, DGS%XH, DGS%XLE, DGS%XLEI, DGS%XGFLUX,        &
                                  DGS%XSWD, DGS%XSWU, DGS%XSWBD, DGS%XSWBU, DGS%XLWD, DGS%XLWU, &
                                  DGS%XFMU, DGS%XFMV, DGS%XEVAP, ZEVAP_ICE, DGS%XSUBL,          &

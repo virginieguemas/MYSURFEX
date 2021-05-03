@@ -9,7 +9,7 @@ SUBROUTINE DIAG_INLINE_SEAFLUX_n (DGS, DGSI, S, &
      PMERA, PHT, PHW, PCD, PCDN, PCH, PCE, PRI, PHU,     &
      PZ0H, PQSAT, PSFTH, PSFTQ, PSFZON, PSFMER,     &
      PDIR_SW, PSCA_SW, PLW, PDIR_ALB, PSCA_ALB, &
-     PEMIS, PTRAD, PRAIN, PSNOW, PCO2,                   & 
+     PEMIS, PTRAD, PRAIN, PSNOW, PCO2,                   &
      PCD_ICE, PCDN_ICE, PCH_ICE, PCE_ICE, PRI_ICE,       &
      PZ0_ICE, PZ0H_ICE, PQSAT_ICE, PSFTH_ICE, PSFTQ_ICE, &
      PSFZON_ICE, PSFMER_ICE, PSFTH_FORM, PSFTQ_FORM,     &
@@ -241,18 +241,18 @@ IF (DGS%LSURF_BUDGET.OR.DGS%LSURF_BUDGETC) THEN
 !
   CALL SEAFLUX_ALBEDO(PDIR_SW,PSCA_SW,PDIR_ALB,PSCA_ALB,DGS%XALBT)
 !
-  CALL DIAG_SURF_BUDGET_SEA   (XTTS, S%XSST, PRHOA, PSFTH, PSFTH_ICE,    &
-                                 PSFTH_FORM, PSFTQ, PSFTQ_ICE, PSFTQ_FORM, &
-                                 PDIR_SW, PSCA_SW, PLW, PDIR_ALB,      &
-                                 PSCA_ALB,S%XICE_ALB, PEMIS, PTRAD,      &
-                                 PSFZON, PSFZON_ICE, PSFZON_FORM, PSFMER,    &
-                                 PSFMER_ICE, PSFMER_FORM, S%LHANDLE_SIC, S%XSIC, S%XTICE, &
-                                 DGS%XRN, DGS%XH, DGS%XLE, DGS%XLEI, DGS%XGFLUX,        &
-                                 DGS%XSWD, DGS%XSWU, DGS%XSWBD, DGS%XSWBU, DGS%XLWD, DGS%XLWU, &
-                                 DGS%XFMU, DGS%XFMV, DGS%XEVAP, ZEVAP_ICE, DGS%XSUBL,          &
-                                 DGS%XRN_ICE, DGS%XH_ICE,  DGS%XLE_ICE, DGS%XGFLUX_ICE,        &
-                                 DGS%XSWU_ICE, DGS%XSWBU_ICE, DGS%XLWU_ICE,        &
-                                 DGS%XFMU_ICE, DGS%XFMV_ICE                    ) 
+  CALL DIAG_SURF_BUDGET_SEA   (XTTS, S%XSST, PRHOA, PSFTH, PSFTH_ICE,                           &
+                               PSFTH_FORM, PSFTQ, PSFTQ_ICE,                                    &
+                               PSFTQ_FORM, PDIR_SW, PSCA_SW, PLW,                               &
+                               PDIR_ALB, PSCA_ALB,S%XICE_ALB, PEMIS, PTRAD,                     &
+                               PSFZON, PSFZON_ICE, PSFZON_FORM, PSFMER,                         &
+                               PSFMER_ICE, PSFMER_FORM, S%LHANDLE_SIC,                          &
+                               S%XSIC, S%XTICE, DGS%XRN, DGS%XH, DGS%XLE, DGS%XLEI, DGS%XGFLUX, &
+                               DGS%XSWD, DGS%XSWU, DGS%XSWBD, DGS%XSWBU, DGS%XLWD, DGS%XLWU,    &
+                               DGS%XFMU, DGS%XFMV, DGS%XEVAP, ZEVAP_ICE, DGS%XSUBL,             &
+                               DGS%XRN_ICE, DGS%XH_ICE,  DGS%XLE_ICE, DGS%XGFLUX_ICE,           &
+                               DGS%XSWU_ICE, DGS%XSWBU_ICE, DGS%XLWU_ICE,                       &
+                               DGS%XFMU_ICE, DGS%XFMV_ICE                                       ) 
 !
 END IF
 !

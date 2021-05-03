@@ -8,7 +8,7 @@ SUBROUTINE  DIAG_SURF_BUDGET_SEA(PTT , PSST, PRHOA, PSFTH, PSFTH_ICE,    &
                                  PSFTQ_FORM, PDIR_SW, PSCA_SW, PLW,      &
                                  PDIR_ALB,PSCA_ALB,PALB_ICE,PEMIS, PTRAD,&
                                  PSFZON, PSFZON_ICE, PSFZON_FORM, PSFMER,&
-                                 PSFMER_ICE, PSFMER_FORM, OHANDLE_SIC, 
+                                 PSFMER_ICE, PSFMER_FORM, OHANDLE_SIC,   &
                                  PSIC, PTICE, PRN, PH, PLE, PLEI, PGFLUX,&
                                  PSWD, PSWU, PSWBD, PSWBU, PLWD, PLWU,   &
                                  PFMU, PFMV, PEVAP, PEVAP_ICE, PSUBL,    &

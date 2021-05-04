@@ -209,7 +209,6 @@ REAL, DIMENSION(KI) :: ZRESA_SEA  ! aerodynamical resistance on open sea
 REAL, DIMENSION(KI) :: ZRESA_SEA_ICE  ! "     "          on seaice
 REAL, DIMENSION(KI) :: ZUSTAR     ! friction velocity (m/s) on open sea
 REAL, DIMENSION(KI) :: ZUSTAR_ICE ! "     "          on seaice
-REAL, DIMENSION(KI) :: ZZ0        ! aerodynamic roughness length over open sea
 REAL, DIMENSION(KI) :: ZZ0_ICE    ! aerodynamic roughness length over seaice
 REAL, DIMENSION(KI) :: ZZ0H       ! heat roughness length over open sea
 REAL, DIMENSION(KI) :: ZZ0H_ICE   ! heat roughness length over seaice
@@ -285,7 +284,6 @@ ZRI      (:) = XUNDEF
 ZHU      (:) = XUNDEF
 ZRESA_SEA(:) = XUNDEF
 ZUSTAR   (:) = XUNDEF
-ZZ0      (:) = XUNDEF
 ZZ0H     (:) = XUNDEF
 ZQSAT    (:) = XUNDEF
 !
@@ -752,18 +750,25 @@ IF (SM%S%LHANDLE_SIC) THEN
       SM%S%XICE_ALB=XALBSEAICE           
    ENDIF
 !
+   PRINT*, 'ZZ0', SM%S%XZ0
+   PRINT*, 'ZZ0_ICE', ZZ0_ICE
+   PRINT*, 'ZZ0H', ZZ0H
+   PRINT*, 'ZZ0H_ICE', ZZ0H_ICE
+
    PTSURF (:) = SM%S%XSST(:)*(1.0-SM%S%XSIC(:)) + SM%S%XTICE(:)*SM%S%XSIC(:)
    PQSURF (:) = ZQSAT    (:)*(1.0-SM%S%XSIC(:)) + ZQSAT_ICE (:)*SM%S%XSIC(:)
 !
-   ZZ0W   (:) = (1.0-SM%S%XSIC(:)) * 1.0/(LOG(PUREF(:)/ZZ0(:))    **2)  +  &
-                     SM%S%XSIC(:)  * 1.0/(LOG(PUREF(:)/ZZ0_ICE(:))**2)
+   ZZ0W   (:) = (1.0-SM%S%XSIC(:)) * 1.0/(LOG(PUREF(:)/SM%S%XZ0(:)) **2)  +  &
+                     SM%S%XSIC(:)  * 1.0/(LOG(PUREF(:)/ZZ0_ICE(:))  **2)
 !
    PZ0    (:) = PUREF (:) * EXP ( - SQRT ( 1./  ZZ0W(:) ))
 !
-   ZZ0W   (:) = (1.0-SM%S%XSIC(:)) * 1.0/(LOG(PZREF(:)/ZZ0H(:))    **2)  +  &
-                     SM%S%XSIC(:)  * 1.0/(LOG(PZREF(:)/ZZ0H_ICE(:))**2)  
-   PZ0H   (:) = PZREF (:) * EXP ( - SQRT ( 1./  ZZ0W(:) ))
+   ZZ0W   (:) = (1.0-SM%S%XSIC(:)) * 1.0/(LOG(PZREF(:)/ZZ0H(:))*LOG(PUREF(:)/SM%S%XZ0(:)))  +  &
+                     SM%S%XSIC(:)  * 1.0/(LOG(PZREF(:)/ZZ0H_ICE(:))*LOG(PUREF(:)/ZZ0_ICE(:)))
+   PZ0H   (:) = PZREF (:) * EXP ( - 1./  (ZZ0W(:)*LOG(PUREF(:)/PZ0(:))) )
 !
+   PRINT*, 'PZ0', PZ0
+   PRINT*, 'PZ0H', PZ0H
 ELSE
 !
    PTSURF (:) = SM%S%XSST(:) 

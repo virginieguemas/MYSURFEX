@@ -210,7 +210,6 @@ REAL, DIMENSION(KI) :: ZRESA_SEA_ICE  ! "     "          on seaice
 REAL, DIMENSION(KI) :: ZUSTAR     ! friction velocity (m/s) on open sea
 REAL, DIMENSION(KI) :: ZUSTAR_ICE ! "     "          on seaice
 REAL, DIMENSION(KI) :: ZZ0_ICE    ! aerodynamic roughness length over seaice
-REAL, DIMENSION(KI) :: ZZ0H       ! heat roughness length over open sea
 REAL, DIMENSION(KI) :: ZZ0H_ICE   ! heat roughness length over seaice
 REAL, DIMENSION(KI) :: ZZ0W       ! Work array for Z0 and Z0H computation
 REAL, DIMENSION(KI) :: ZQSAT      ! humidity at saturation on open sea
@@ -284,7 +283,6 @@ ZRI      (:) = XUNDEF
 ZHU      (:) = XUNDEF
 ZRESA_SEA(:) = XUNDEF
 ZUSTAR   (:) = XUNDEF
-ZZ0H     (:) = XUNDEF
 ZQSAT    (:) = XUNDEF
 !
 ZMASK    (:) = 0.
@@ -387,31 +385,30 @@ ENDIF
 !
 SELECT CASE (SM%S%CSEA_FLUX)
   CASE ('DIRECT')
-    CALL WATER_FLUX(SM%S%XZ0,                                              &
+    CALL WATER_FLUX(SM%S%XZ0,                                         &
                       PTA, ZEXNA, PRHOA, ZSST, ZEXNS, ZQA, PRAIN,     &
                       PSNOW, XTTS,                                    &
                       ZWIND, PZREF, PUREF,                            &
-                      PPS, SM%S%LHANDLE_SIC, ZQSAT,                        &
+                      PPS, SM%S%LHANDLE_SIC, ZQSAT,                   &
                       ZSFTH, ZSFTQ, ZUSTAR,                           &
-                      ZCD, ZCDN, ZCH, ZRI, ZRESA_SEA, ZZ0H            )  
+                      ZCD, ZCDN, ZCH, ZRI, ZRESA_SEA, SM%S%XZ0H       )  
   CASE ('ITERAT')
-    CALL MR98      (SM%S%XZ0,                                              &
-                      PTA, ZEXNA, PRHOA, SM%S%XSST, ZEXNS, ZQA,            &
+    CALL MR98      (SM%S%XZ0,                                         &
+                      PTA, ZEXNA, PRHOA, SM%S%XSST, ZEXNS, ZQA,       &
                       XTTS,                                           &
                       ZWIND, PZREF, PUREF,                            &
                       PPS, ZQSAT,                                     &
                       ZSFTH, ZSFTQ, ZUSTAR,                           &
-                      ZCD, ZCDN, ZCH, ZRI, ZRESA_SEA, ZZ0H            )  
-
+                      ZCD, ZCDN, ZCH, ZRI, ZRESA_SEA, SM%S%XZ0H       )  
   CASE ('ECUME ','ECUME6')
-    CALL ECUME_SEAFLUX(SM%S%XZ0, ZMASK, ISIZE_WATER, ISIZE_ICE,            &
-                      PTA, ZEXNA ,PRHOA, ZSST, SM%S%XSSS, ZEXNS, ZQA,      &
+    CALL ECUME_SEAFLUX(SM%S%XZ0, ZMASK, ISIZE_WATER, ISIZE_ICE,       &
+                      PTA, ZEXNA ,PRHOA, ZSST, SM%S%XSSS, ZEXNS, ZQA, &
                       PRAIN, PSNOW,                                   &
                       ZWIND, PZREF, PUREF, PPS, PPA,                  &
                       SM%S%XICHCE, SM%S%LPRECIP, SM%S%LPWEBB, SM%S%LPWG, SM%S%NZ0,             &
-                      SM%S%LHANDLE_SIC, ZQSAT, ZSFTH, ZSFTQ, ZUSTAR,       &
-                      ZCD, ZCDN, ZCH, ZCE, ZRI, ZRESA_SEA, ZZ0H,      &
-                      SM%S%LPERTFLUX, SM%S%XPERTFLUX, SM%S%CSEA_FLUX                 )
+                      SM%S%LHANDLE_SIC, ZQSAT, ZSFTH, ZSFTQ, ZUSTAR,  &
+                      ZCD, ZCDN, ZCH, ZCE, ZRI, ZRESA_SEA, SM%S%XZ0H, &
+                      SM%S%LPERTFLUX, SM%S%XPERTFLUX, SM%S%CSEA_FLUX  )
   CASE ('COARE3')
     CALL COARE30_SEAFLUX(SM%S, &
                          ZMASK, ISIZE_WATER, ISIZE_ICE,          &
@@ -420,7 +417,7 @@ SELECT CASE (SM%S%CSEA_FLUX)
                       ZWIND, PZREF, PUREF,                            &
                       PPS, ZQSAT,                        &
                       ZSFTH, ZSFTQ, ZUSTAR,                           &
-                      ZCD, ZCDN, ZCH, ZCE, ZRI, ZRESA_SEA, ZZ0H       )  
+                      ZCD, ZCDN, ZCH, ZCE, ZRI, ZRESA_SEA, SM%S%XZ0H  )  
 END SELECT
 !
 !-------------------------------------------------------------------------------------
@@ -487,7 +484,7 @@ IF(SM%S%LHANDLE_SIC)THEN
             (ZSFTH(:) / (PRHOA(:)*XCPD) * (1 + ZRVSRDM1*PQA(:)) +&  
             ZRVSRDM1 * PTA(:)/ZEXNA(:) * ZSFTQ(:) / PRHOA(:) )) 
 
-    ZRATIOO(:) = SM%S%XZ0(:) / ZZ0H(:)
+    ZRATIOO(:) = SM%S%XZ0(:) / SM%S%XZ0H(:)
     
     ZRATIOI(:) = ZZ0_ICE(:) / ZZ0H_ICE(:)
 
@@ -606,7 +603,7 @@ ENDIF
  CALL DIAG_INLINE_SEAFLUX_n(SM%DGS, SM%DGSI, SM%S, &
                            PTSTEP, PTA, ZQA, PPA, PPS, PRHOA, PU, &
      PV, PZREF, PUREF, ZCD, ZCDN, ZCH, ZCE, ZRI, ZHU,       &
-     ZZ0H, ZQSAT, ZSFTH, ZSFTQ, ZSFU, ZSFV,                 &
+     SM%S%XZ0H, ZQSAT, ZSFTH, ZSFTQ, ZSFU, ZSFV,            &
      PDIR_SW, PSCA_SW, PLW, ZDIR_ALB, ZSCA_ALB,             &
      ZEMIS, ZTRAD, PRAIN, PSNOW, ZCO2,                      &
      ZCD_ICE, ZCDN_ICE, ZCH_ICE, ZCE_ICE, ZRI_ICE,          &
@@ -761,7 +758,7 @@ IF (SM%S%LHANDLE_SIC) THEN
 !
    PZ0    (:) = PUREF (:) * EXP ( - SQRT ( 1./  ZZ0W(:) ))
 !
-   ZZ0W   (:) = (1.0-SM%S%XSIC(:)) * 1.0/(LOG(PZREF(:)/ZZ0H(:))*LOG(PUREF(:)/SM%S%XZ0(:)))  +  &
+   ZZ0W   (:) = (1.0-SM%S%XSIC(:)) * 1.0/(LOG(PZREF(:)/SM%S%XZ0H(:))*LOG(PUREF(:)/SM%S%XZ0(:)))  +  &
                      SM%S%XSIC(:)  * 1.0/(LOG(PZREF(:)/ZZ0H_ICE(:))*LOG(PUREF(:)/ZZ0_ICE(:)))
    PZ0H   (:) = PZREF (:) * EXP ( - 1./  (ZZ0W(:)*LOG(PUREF(:)/PZ0(:))) )
 !
@@ -770,7 +767,7 @@ ELSE
    PTSURF (:) = SM%S%XSST(:) 
    PQSURF (:) = ZQSAT    (:) 
    PZ0    (:) = SM%S%XZ0 (:) 
-   PZ0H   (:) = ZZ0H     (:)
+   PZ0H   (:) = SM%S%XZ0H(:)
 !
 ENDIF
 !
@@ -865,7 +862,6 @@ IF (LHOOK) CALL DR_HOOK('COUPLING_SEAFLUX_N: COMPLEMENT_EACH_OTHER_FLUX',0,ZHOOK
      ZCH=ZCH_ICE
      ZCE=ZCE_ICE
      ZRI=ZRI_ICE 
-     ZZ0H=ZZ0H_ICE
   END WHERE
   WHERE (SM%S%XSIC(:) == 0.)
      ZSFTH_ICE=ZSFTH 
@@ -878,7 +874,6 @@ IF (LHOOK) CALL DR_HOOK('COUPLING_SEAFLUX_N: COMPLEMENT_EACH_OTHER_FLUX',0,ZHOOK
      ZCH_ICE=ZCH
      ZCE_ICE=ZCE
      ZRI_ICE=ZRI 
-     ZZ0H_ICE=ZZ0H
   END WHERE
 !
 IF (LHOOK) CALL DR_HOOK('COUPLING_SEAFLUX_N: COMPLEMENT_EACH_OTHER_FLUX',1,ZHOOK_HANDLE)

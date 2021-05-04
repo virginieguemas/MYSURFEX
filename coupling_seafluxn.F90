@@ -750,11 +750,6 @@ IF (SM%S%LHANDLE_SIC) THEN
       SM%S%XICE_ALB=XALBSEAICE           
    ENDIF
 !
-   PRINT*, 'ZZ0', SM%S%XZ0
-   PRINT*, 'ZZ0_ICE', ZZ0_ICE
-   PRINT*, 'ZZ0H', ZZ0H
-   PRINT*, 'ZZ0H_ICE', ZZ0H_ICE
-
    PTSURF (:) = SM%S%XSST(:)*(1.0-SM%S%XSIC(:)) + SM%S%XTICE(:)*SM%S%XSIC(:)
    PQSURF (:) = ZQSAT    (:)*(1.0-SM%S%XSIC(:)) + ZQSAT_ICE (:)*SM%S%XSIC(:)
 !
@@ -767,8 +762,6 @@ IF (SM%S%LHANDLE_SIC) THEN
                      SM%S%XSIC(:)  * 1.0/(LOG(PZREF(:)/ZZ0H_ICE(:))*LOG(PUREF(:)/ZZ0_ICE(:)))
    PZ0H   (:) = PZREF (:) * EXP ( - 1./  (ZZ0W(:)*LOG(PUREF(:)/PZ0(:))) )
 !
-   PRINT*, 'PZ0', PZ0
-   PRINT*, 'PZ0H', PZ0H
 ELSE
 !
    PTSURF (:) = SM%S%XSST(:) 

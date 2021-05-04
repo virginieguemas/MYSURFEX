@@ -276,15 +276,23 @@ IF (DGS%LCOEF) THEN
       !
       !* Roughness lengths
       !
+      PRINT*,'PHW',PHT
+      PRINT*,'SIC',S%XSIC
+      PRINT*,'Z0', S%XZ0
+      PRINT*,'Z0_ICE',PZ0_ICE
+      PRINT*,'Z0H',PZ0H
+      PRINT*,'Z0H_ICE',PZ0H_ICE
       ZZ0W(:) = (1.0-S%XSIC(:)) * 1.0/(LOG(PHW/S%XZ0  (:))**2)  +  &
                      S%XSIC(:)  * 1.0/(LOG(PHW/PZ0_ICE(:))**2)
       !
       DGS%XZ0(:)  = PHW * EXP(-SQRT( 1./ZZ0W(:)))
       !
-      ZZ0W(:) = (1.0-S%XSIC(:)) * 1.0/(LOG(PHW/PZ0H    (:))**2)  +  &
-                     S%XSIC(:)  * 1.0/(LOG(PHW/PZ0H_ICE(:))**2)
+      PRINT*, 'DGS%XZ0', DGS%XZ0
+      ZZ0W(:) = (1.0-S%XSIC(:)) * 1.0/(LOG(PHT/PZ0H    (:))*LOG(PHW/S%XZ0  (:)))  +  &
+                     S%XSIC(:)  * 1.0/(LOG(PHT/PZ0H_ICE(:))*LOG(PHW/PZ0_ICE(:)))
       !
-      DGS%XZ0H = PHW * EXP(-SQRT(1./ZZ0W(:)))
+      DGS%XZ0H = PHT * EXP( -1./ (ZZ0W(:)*LOG(PHW/DGS%XZ0(:))) )
+      PRINT*, 'DGS%XZ0H', DGS%XZ0H
 
       DGS%XCD_ICE (:) = PCD_ICE (:)
       DGS%XCH_ICE (:) = PCH_ICE (:)

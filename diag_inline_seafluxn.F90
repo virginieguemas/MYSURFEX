@@ -3,14 +3,15 @@
 !SFX_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !SFX_LIC for details. version 1.
 !     #########
-SUBROUTINE DIAG_INLINE_SEAFLUX_n (DGS, DGSI, S, &
-                                  PTSTEP, PTA, PQA, &
+SUBROUTINE DIAG_INLINE_SEAFLUX_n (DGS, DGSI, S,          &
+                                  PTSTEP, PTA, PQA,      &
      PPA, PPS, PRHOA, PZONA,                             &
      PMERA, PHT, PHW, PCD, PCDN, PCH, PCE, PRI, PHU,     &
-     PZ0H, PQSAT, PSFTH, PSFTQ, PSFZON, PSFMER,     &
-     PDIR_SW, PSCA_SW, PLW, PDIR_ALB, PSCA_ALB, &
+     PZ0H, PQSAT, PSFTH, PSFTQ, PSFZON, PSFMER,          &
+     PDIR_SW, PSCA_SW, PLW, PDIR_ALB, PSCA_ALB,          &
      PEMIS, PTRAD, PRAIN, PSNOW, PCO2,                   &
      PCD_ICE, PCDN_ICE, PCH_ICE, PCE_ICE, PRI_ICE,       &
+     PCD_FORM, PCH_FORM,                                 &
      PZ0_ICE, PZ0H_ICE, PQSAT_ICE, PSFTH_ICE, PSFTQ_ICE, &
      PSFZON_ICE, PSFMER_ICE, PSFTH_FORM, PSFTQ_FORM,     &
      PSFZON_FORM, PSFMER_FORM )
@@ -124,6 +125,8 @@ REAL, DIMENSION(:), INTENT(IN)    :: PCD_ICE    ! drag coefficient for momentum
 REAL, DIMENSION(:), INTENT(IN)    :: PCDN_ICE   ! neutral drag coefficient
 REAL, DIMENSION(:), INTENT(IN)    :: PCH_ICE    ! drag coefficient for heat
 REAL, DIMENSION(:), INTENT(IN)    :: PCE_ICE    ! drag coefficient for vapor
+REAL, DIMENSION(:), INTENT(IN)    :: PCD_FORM   ! form drag coefficient for momentum
+REAL, DIMENSION(:), INTENT(IN)    :: PCH_FORM   ! form drag coefficient for heat
 REAL, DIMENSION(:), INTENT(IN)    :: PRI_ICE    ! Richardson number
 REAL, DIMENSION(:), INTENT(IN)    :: PZ0_ICE    ! roughness length for momentum
 REAL, DIMENSION(:), INTENT(IN)    :: PZ0H_ICE   ! roughness length for heat
@@ -274,25 +277,21 @@ IF (DGS%LCOEF) THEN
       DGS%XCH(:) = (1.0-S%XSIC(:)) * PCH(:) + S%XSIC(:) * PCH_ICE(:)
       DGS%XCE(:) = (1.0-S%XSIC(:)) * PCE(:) + S%XSIC(:) * PCE_ICE(:)
       !
+      IF (S%LFORMDRAG) THEN
+         DGS%XCD_FORM(:) = PCD_FORM(:)
+         DGS%XCH_FORM(:) = PCH_FORM(:)
+      ENDIF
       !* Roughness lengths
       !
-      PRINT*,'PHW',PHT
-      PRINT*,'SIC',S%XSIC
-      PRINT*,'Z0', S%XZ0
-      PRINT*,'Z0_ICE',PZ0_ICE
-      PRINT*,'Z0H',PZ0H
-      PRINT*,'Z0H_ICE',PZ0H_ICE
       ZZ0W(:) = (1.0-S%XSIC(:)) * 1.0/(LOG(PHW/S%XZ0  (:))**2)  +  &
                      S%XSIC(:)  * 1.0/(LOG(PHW/PZ0_ICE(:))**2)
       !
       DGS%XZ0(:)  = PHW * EXP(-SQRT( 1./ZZ0W(:)))
       !
-      PRINT*, 'DGS%XZ0', DGS%XZ0
       ZZ0W(:) = (1.0-S%XSIC(:)) * 1.0/(LOG(PHT/PZ0H    (:))*LOG(PHW/S%XZ0  (:)))  +  &
                      S%XSIC(:)  * 1.0/(LOG(PHT/PZ0H_ICE(:))*LOG(PHW/PZ0_ICE(:)))
       !
       DGS%XZ0H = PHT * EXP( -1./ (ZZ0W(:)*LOG(PHW/DGS%XZ0(:))) )
-      PRINT*, 'DGS%XZ0H', DGS%XZ0H
 
       DGS%XCD_ICE (:) = PCD_ICE (:)
       DGS%XCH_ICE (:) = PCH_ICE (:)

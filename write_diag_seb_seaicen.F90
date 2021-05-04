@@ -268,6 +268,21 @@ IF (DGS%LCOEF) THEN
    CALL WRITE_SURF(DGU, U, &
                   HPROGRAM,YRECFM,DGS%XCH_ICE(:),IRESP,HCOMMENT=YCOMMENT)
    !
+   IF (S%LFORMDRAG) THEN
+      !
+      YRECFM='CD_FORM'
+      YCOMMENT='X_Y_'//YRECFM//' (W/s2)'
+      !
+      CALL WRITE_SURF(DGU, U, &
+                  HPROGRAM,YRECFM,DGS%XCD_FORM(:),IRESP,HCOMMENT=YCOMMENT)
+      !
+      YRECFM='CH_FORM'
+      YCOMMENT='X_Y_'//YRECFM//' (W/s)'
+      !
+      CALL WRITE_SURF(DGU, U, &
+                  HPROGRAM,YRECFM,DGS%XCH_FORM(:),IRESP,HCOMMENT=YCOMMENT)
+   ENDIF
+   !
    YRECFM='Z0_SEAICE'
    YCOMMENT='X_Y_'//YRECFM//' (M)'
    !

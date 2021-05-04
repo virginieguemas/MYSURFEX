@@ -604,12 +604,13 @@ ENDIF
  CALL DIAG_INLINE_SEAFLUX_n(SM%DGS, SM%DGSI, SM%S, &
                            PTSTEP, PTA, ZQA, PPA, PPS, PRHOA, PU, &
      PV, PZREF, PUREF, ZCD, ZCDN, ZCH, ZCE, ZRI, ZHU,       &
-     ZZ0H, ZQSAT, ZSFTH, ZSFTQ, ZSFU, ZSFV,            &
-     PDIR_SW, PSCA_SW, PLW, ZDIR_ALB, ZSCA_ALB,    &
+     ZZ0H, ZQSAT, ZSFTH, ZSFTQ, ZSFU, ZSFV,                 &
+     PDIR_SW, PSCA_SW, PLW, ZDIR_ALB, ZSCA_ALB,             &
      ZEMIS, ZTRAD, PRAIN, PSNOW, ZCO2,                      &
      ZCD_ICE, ZCDN_ICE, ZCH_ICE, ZCE_ICE, ZRI_ICE,          &
+     ZCDF, ZCHF,                                             &
      ZZ0_ICE, ZZ0H_ICE, ZQSAT_ICE, ZSFTH_ICE, ZSFTQ_ICE,    &
-     ZSFU_ICE, ZSFV_ICE, ZSFTH_FORM, ZSFTQ_FORM, ZSFU_FORM,  &
+     ZSFU_ICE, ZSFV_ICE, ZSFTH_FORM, ZSFTQ_FORM, ZSFU_FORM, &
      ZSFV_FORM)
 !
 !-------------------------------------------------------------------------------

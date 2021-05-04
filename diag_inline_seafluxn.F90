@@ -298,6 +298,10 @@ IF (DGS%LCOEF) THEN
       DGS%XZ0_ICE (:) = PZ0_ICE (:)
       DGS%XZ0H_ICE(:) = PZ0H_ICE(:)
       !
+      DGS%XCD_SEA (:) = PCD (:)
+      DGS%XCH_SEA (:) = PCH (:)
+      DGS%XCE_SEA (:) = PCE (:)
+      !
    ELSE
       !
       !* Transfer coefficients

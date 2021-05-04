@@ -51,6 +51,12 @@ SUBROUTINE COUPLING_SEAFLUX_n (SM, DST, SLT, &
 !!      Modified    01/2015 : R. Séférian interactive ocaen surface albedo
 !!      Modified    09/2016 : A. Voldoire Switch to tile the fluxes calculation over sea and seaice
 !!      Modified    11/2016 : R. Séférian Implement carbon cycle coupling (Earth system model)
+!!      Modified    05/2021 : V Guemas    1. Form drag contribution to turbulent fluxes over 
+!!                                        a mixture of ice and ocean
+!!                                        2. Bug-fix in computation of averaged scalar and
+!!                                        aerodynamic roughness lengths over ice and ocean
+!!                                        3. Output scalar roughness over sea only
+!!                                        4. Bug-fix in output CE averaged over ice and ocean
 !!                                       
 !!---------------------------------------------------------------------
 !

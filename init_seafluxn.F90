@@ -51,6 +51,8 @@
 !!      A. Voldoire 09/2016 : Switch to tile the fluxes calculation over sea and seaice
 !!      R. Séférian 11/2016 : Implement carbon cycle coupling (Earth system model)
 !!      V. Guemas   04/2021 : Option to change psi function for COARE3 algorithm
+!!      V. Guemas   05/2021 : Options to activate and tune form drag contribution
+!!                            over a mixture of ice and ocean
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS

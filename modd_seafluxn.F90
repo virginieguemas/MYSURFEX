@@ -31,6 +31,7 @@
 !!      S. Belamari   03/2014  Include NZ0
 !!      R. Séférian   11/2016  Implement carbon cycle coupling (Earth system model)
 !       V. Guemas     04/2021  Option to choose psi function for COARE3
+!       V. Guemas     05/2021  Form drag contribution over a mixture of ice and ocean
 !
 !*       0.   DECLARATIONS
 !             ------------

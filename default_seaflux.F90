@@ -40,7 +40,10 @@
 !!      Original    01/2004 
 !!      Modified    01/2006 : sea flux parameterization.
 !!      S. Belamari 03/2014 : add KZ0 (to choose PZ0SEA formulation)
-!!      R. Séférian    11/16 : Implement carbon cycle coupling (Earth system model)
+!!      R. Séférian   11/16 : Implement carbon cycle coupling (Earth system model)
+!!      V. Guemas     04/21 : Choice of psi function for COARE3.0 algorithm
+!!      V. Guemas     05/21 : Activate and tune form drag contribution over a 
+!!                            mixture of ice and ocean
 !!!
 !-------------------------------------------------------------------------------
 !

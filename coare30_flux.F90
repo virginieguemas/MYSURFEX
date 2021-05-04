@@ -56,6 +56,16 @@
 !!      J.Escobar      06/2013  for REAL4/8 add EPSILON management
 !!      C. Lebeaupin   03/2014 bug if PTA=PSST and PEXNA=PEXNS: set a minimum value
 !!                             add abort if no convergence
+!!      V. Guemas      04/2021 bug - fixes :
+!!                             1. Wind without gustiness correction in Ri
+!!                             2. Heat transfer coefficient from 
+!!                                potential temperature difference
+!!                             3. XRV instead of XRD in precipitation correction
+!!                             4. Webb correction formula
+!!                             5. Charnock parameter and gravity wave parameters
+!!                                from neutral wind speed instead of wind speed
+!!                             6. Output scalar and aerodynamic roughness lengths 
+!!                                equal to those used in the COARE algorithm
 !-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS

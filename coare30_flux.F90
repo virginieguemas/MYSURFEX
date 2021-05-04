@@ -67,8 +67,6 @@ USE MODD_SEAFLUX_n, ONLY : SEAFLUX_t
 USE MODD_CSTS,       ONLY : XKARMAN, XG, XSTEFAN, XRD, XRV, XPI, &
                             XLVTT, XCL, XCPD, XCPV, XRHOLW, XTT, &
                             XP00
-USE MODD_SURF_ATM,   ONLY : XVZ0CM
-!
 USE MODD_SURF_PAR,   ONLY : XUNDEF, XSURF_EPSILON
 USE MODD_WATER_PAR
 !
@@ -572,9 +570,11 @@ PRESA(:) = 1. / MAX(ZAC(:),XSURF_EPSILON)
 !
 !        5.3 Z0 and Z0H over sea
 !
-PZ0SEA(:) =  ZCHARN(:) * ZUSTAR2(:) / XG + XVZ0CM * PCD(:) / PCDN(:)
-! Why ? We already have Z0 et Z0T which are more robust estimates.
-PZ0HSEA(:) = PZ0SEA(:)
+PZ0SEA(:) =  ZO(:)
+! We use the aerodynamic and scalar roughness estimated in the COARE3.0*
+! algorithm to be consistent with the CDN / CHN / CQN used to estimate the
+! fluxes
+PZ0HSEA(:) = ZOT(:)
 !
 IF (LHOOK) CALL DR_HOOK('COARE30_FLUX',1,ZHOOK_HANDLE)
 !

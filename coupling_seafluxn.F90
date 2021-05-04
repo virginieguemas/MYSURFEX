@@ -468,6 +468,8 @@ IF(SM%S%LHANDLE_SIC)THEN
                      ZUSTAR_ICE, ZCD_ICE, ZCDN_ICE, ZCH_ICE,   &
                      ZRI_ICE, ZRESA_SEA_ICE, ZZ0H_ICE          )
 !
+  ZCE_ICE (:) = ZCH_ICE (:)
+!
   CALL COMPLEMENT_EACH_OTHER_FLUX
 !
 ! Momentum fluxes over sea-ice if embedded seaice scheme is used

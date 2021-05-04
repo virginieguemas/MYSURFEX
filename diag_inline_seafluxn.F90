@@ -45,6 +45,10 @@ SUBROUTINE DIAG_INLINE_SEAFLUX_n (DGS, DGSI, S,          &
 !!      S. Senesi   01/2014 ! introduce fractional seaice and sea-ice model 
 !!      R. Séférian    11/16 : Implement carbon cycle coupling (Earth system model)
 !!      A.Voldoire  04/2018  GELATO1D in regional model
+!!      V. Guemas   05/2021 : contribution from form drag split over ice and ocean
+!!                            and associated exchange coefficients in the outputs
+!!                            exchange coefficients over sea only added in the outputs
+!!                            bug-fix for averaged scalar roughness over ice and sea
 !!------------------------------------------------------------------
 !
 

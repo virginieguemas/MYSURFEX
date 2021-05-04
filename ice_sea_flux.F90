@@ -51,6 +51,8 @@
 !!      (B. Decharme)    06/09  limitation of Ri
 !!      (B. Decharme)    09/09  limitation of Ri in surface_ri.F90
 !!      (S.Senesi)       01/14  use XCD_ICE_CST (if /= 0) as value for for Cd, Cdn and Ch
+!!      (V.Guemas)       05/21  Output scalar and aerodynamic roughness consistent
+!!                              with XCD_ICE_CST when /=0
 !-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS

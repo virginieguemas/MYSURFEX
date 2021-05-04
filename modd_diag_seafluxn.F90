@@ -28,6 +28,8 @@
 !!      Original       01/2004
 !!      Modified    01/2006 : sea flux parameterization.
 !!      S.Senesi    01/2014 : add diags on seaice 
+!!      V.Guemas    04/2021 : Add exchange coefficients over sea only and due to
+!!                            form drag contribution over a mixture of sea and ice
 !
 !*       0.   DECLARATIONS
 !             ------------

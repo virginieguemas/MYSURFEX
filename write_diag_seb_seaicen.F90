@@ -27,6 +27,8 @@
 !!    MODIFICATIONS
 !!    -------------
 !!      Original    01/2014
+!!      V.Guemas    04/2021 : Add exchange coefficients over sea only and due to
+!!                            form drag contribution over a mixture of sea and ice
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS

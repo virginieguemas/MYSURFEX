@@ -39,6 +39,7 @@
 !!      R. Séférian 01/2015 : introduce interactive ocean surface albedo
 !!      S. Senesi   08/2015 : fix units in some HCOMMENTs
 !!      A. Voldoire 09/2016 : Switch to tile the fluxes calculation over sea and seaice
+!!      V. Guemas   05/2021 : Output scalar roughness over sea only
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS

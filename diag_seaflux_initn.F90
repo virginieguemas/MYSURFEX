@@ -38,8 +38,10 @@
 !!      Modified    08/2009 : cumulative sea flux 
 !!      B. decharme 04/2013 : Add EVAP and SUBL diag
 !!      S.Senesi    01/2014 : introduce fractional seaice 
-!!      R. Séférian    11/16 : Implement carbon cycle coupling (Earth system model)
-!!      A.Voldoire  04/2018  GELATO1D in regional model
+!!      R. Séférian 11/2016 : Implement carbon cycle coupling (Earth system model)
+!!      A.Voldoire  04/2018 : GELATO1D in regional model
+!!      V.Guemas    04/2021 : Add exchange coefficients over sea only and due to
+!!                            form drag contribution over a mixture of sea and ice
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS

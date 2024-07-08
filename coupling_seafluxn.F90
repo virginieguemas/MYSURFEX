@@ -51,7 +51,8 @@ SUBROUTINE COUPLING_SEAFLUX_n (SM, DST, SLT, &
 !!      Modified    01/2015 : R. Séférian interactive ocaen surface albedo
 !!      Modified    09/2016 : A. Voldoire Switch to tile the fluxes calculation over sea and seaice
 !!      Modified    11/2016 : R. Séférian Implement carbon cycle coupling (Earth system model)
-!!                                       
+!!      Modified    01/2023 : A. Voldoire bugfix for daily sst usage
+!!                                     
 !!---------------------------------------------------------------------
 !
 !
@@ -79,6 +80,7 @@ USE MODI_WATER_FLUX
 USE MODI_MR98
 USE MODI_ECUME_SEAFLUX
 USE MODI_COARE30_SEAFLUX
+USE MODI_WASP_SEAFLUX
 USE MODI_ADD_FORECAST_TO_DATE_SURF
 USE MODI_MOD1D_n
 USE MODI_DIAG_INLINE_SEAFLUX_n
@@ -231,7 +233,8 @@ REAL, DIMENSION(KI) :: ZTRAD      ! Radiative temperature at time t
 REAL, DIMENSION(KI) :: ZSST       ! XSST corrected for anomalously low values (which actually are sea-ice temp)
 REAL, DIMENSION(KI) :: ZMASK      ! A mask for diagnosing where seaice exists (or, for coupling_iceflux, may appear)
 !
-REAL, DIMENSION(KI) :: ZCO2     ! CO2 concentration (ppmm)
+REAL, DIMENSION(KI) :: ZCO2       ! CO2 concentration (ppmm)
+REAL, DIMENSION(KI) :: ZNUL       !nul array for WASP back-phasing purposes
 !
 REAL                             :: ZCONVERTFACM0_SLT, ZCONVERTFACM0_DST
 REAL                             :: ZCONVERTFACM3_SLT, ZCONVERTFACM3_DST
@@ -243,6 +246,7 @@ INTEGER                          :: ISIZE_ICE    ! number of points with some se
 INTEGER                          :: ISWB       ! number of shortwave spectral bands
 INTEGER                          :: JSWB       ! loop counter on shortwave spectral bands
 INTEGER                          :: ISLT       ! number of sea salt variable
+INTEGER                          :: INDAY      ! number of days since start
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------------
@@ -397,6 +401,17 @@ SELECT CASE (SM%S%CSEA_FLUX)
                       PPS, ZQSAT,                        &
                       ZSFTH, ZSFTQ, ZUSTAR,                           &
                       ZCD, ZCDN, ZCH, ZCE, ZRI, ZRESA_SEA, ZZ0H       )  
+  CASE ('WASPV1')
+        ZNUL(:) = 0.
+        CALL WASP_SEAFLUX(SM%S,                      &
+                         ZMASK, ISIZE_WATER, ISIZE_ICE,          &
+                      PTA, ZEXNA ,PRHOA, ZSST, ZEXNS, ZQA, PRAIN,     &
+                      PSNOW,                                          &
+                      ZWIND, PZREF, PUREF,                            &
+                      PPS, ZQSAT,                        &
+                      ZSFTH, ZSFTQ, ZUSTAR,                           &
+                      ZCD, ZCDN, ZCH, ZCE, ZRI, ZRESA_SEA, ZZ0H,      &
+                      ZNUL, ZNUL)
 END SELECT
 !
 !-------------------------------------------------------------------------------------
@@ -593,7 +608,8 @@ IF (SM%S%LINTERPOL_SSS .AND. MOD(SM%S%TTIME%TIME,XDAY) == 0.) THEN
    ENDIF                      
 ENDIF
 IF (TRIM(SM%S%CINTERPOL_SSS)=='READAY'.AND. MOD(SM%S%TTIME%TIME-PTSTEP,XDAY) == 0.) THEN
-   SM%S%XSSS=SM%S%XSSS_MTH(:,SM%S%TTIME%TDATE%DAY)
+   INDAY=INT(PTIMEC/86400)+1
+   SM%S%XSSS=SM%S%XSSS_MTH(:,INDAY)
 ENDIF
 !
 !-------------------------------------------------------------------------------
@@ -611,7 +627,8 @@ IF (SM%S%LHANDLE_SIC) THEN
          ENDIF
       ENDIF
    ELSE IF (TRIM(SM%S%CINTERPOL_SIC)=='READAY'.AND.MOD(SM%S%TTIME%TIME-PTSTEP,XDAY) == 0.) THEN
-      SM%S%XFSIC=SM%S%XSIC_MTH(:,SM%S%TTIME%TDATE%DAY)
+      INDAY=INT(PTIMEC/86400)+1
+      SM%S%XFSIC=SM%S%XSIC_MTH(:,INDAY)
       IF (ANY(SM%S%XFSIC(:)>1.0).OR.ANY(SM%S%XFSIC(:)<0.0)) THEN
         CALL ABOR1_SFX('COUPLING_SEAFLUX_N: FSIC should be >=0 and <=1') 
       ENDIF
@@ -626,7 +643,8 @@ IF (SM%S%LHANDLE_SIC) THEN
          ENDIF  
       ENDIF
    ELSE IF (TRIM(SM%S%CINTERPOL_SIT)=='READAY'.AND. MOD(SM%S%TTIME%TIME-PTSTEP,XDAY) == 0.) THEN
-      SM%S%XFSIT=SM%S%XSIT_MTH(:,SM%S%TTIME%TDATE%DAY)
+      INDAY=INT(PTIMEC/86400)+1
+      SM%S%XFSIT=SM%S%XSIT_MTH(:,INDAY)
       IF (ANY(SM%S%XFSIT(:)<0.0)) THEN
         CALL ABOR1_SFX('COUPLING_SEAFLUX_N: XFSIT should be >=0') 
       ENDIF  
@@ -675,7 +693,8 @@ ELSEIF (SM%S%LINTERPOL_SST.AND.MOD(SM%S%TTIME%TIME,XDAY) == 0.) THEN
                             SM%S%TTIME%TDATE%YEAR,SM%S%TTIME%TDATE%MONTH,SM%S%TTIME%TDATE%DAY,'T',SM%S%XSST)
    !
 ELSEIF (TRIM(SM%S%CINTERPOL_SST)=='READAY'.AND. MOD(SM%S%TTIME%TIME-PTSTEP,XDAY) == 0.) THEN
-    SM%S%XSST=SM%S%XSST_MTH(:,SM%S%TTIME%TDATE%DAY)
+    INDAY=INT(PTIMEC/86400)+1
+    SM%S%XSST=SM%S%XSST_MTH(:,INDAY)
 ENDIF
 !
 !-------------------------------------------------------------------------------

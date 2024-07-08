@@ -438,7 +438,7 @@ SELECT CASE (SM%S%CSEA_FLUX)
                       ZWIND, PZREF, PUREF,                            &
                       PPS, ZQSAT,                        &
                       ZSFTH, ZSFTQ, ZUSTAR,                           &
-                      ZCD, ZCDN, ZCH, ZCE, ZRI, ZRESA_SEA, ZZ0H,      &
+                      ZCD, ZCDN, ZCH, ZCE, ZRI, ZRESA_SEA, SM%S%XZ0H, &
                       ZNUL, ZNUL)
 END SELECT
 !
